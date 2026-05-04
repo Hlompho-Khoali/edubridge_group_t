@@ -1,10 +1,5 @@
 import os
 from dotenv import load_dotenv
-
-# Load environment variables (only for local development)
-if os.path.exists('.env'):
-    load_dotenv()
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Admin, Educator, Parent, Learner, Game, TestAssignment, TestResult
@@ -13,6 +8,10 @@ from utils.validators import validate_rsa_id, calculate_age, validate_learner_ag
 from datetime import datetime
 import json
 
+# Load environment variables
+load_dotenv()
+
+# Create Flask app
 app = Flask(__name__)
 
 # Configuration
@@ -20,48 +19,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Fix PostgreSQL URL for Render
-if app.config['SQLALCHEMY_DATABASE_URI'] and app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
-
-# Security settings
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('RENDER', 'false').lower() == 'true'
-app.config['REMEMBER_COOKIE_SECURE'] = os.environ.get('RENDER', 'false').lower() == 'true'
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['REMEMBER_COOKIE_HTTPONLY'] = True
-
-# Custom Jinja2 filter
-@app.template_filter('fromjson')
-def from_json_filter(value):
-    if value:
-        try:
-            return json.loads(value)
-        except:
-            return []
-    return []
-
-db.init_app(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-# Rest of your routes go here...
-# (Keep all your existing route functions)
-
-
-
-# Rest of your app.py code continues...
-
-# Custom Jinja2 filter
-@app.template_filter('fromjson')
-def from_json_filter(value):
-    if value:
-        try:
-            return json.loads(value)
-        except:
-            return []
-    return []
-
+# Initialize extensions
 db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -71,8 +29,22 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Custom Jinja2 filter
+@app.template_filter('fromjson')
+def from_json_filter(value):
+    if value:
+        try:
+            return json.loads(value)
+        except:
+            return []
+    return []
+
+# ==================== INITIALIZATION FUNCTION ====================
+
 def init_db():
+    """Initialize database with admin user and games"""
     with app.app_context():
+        # Create tables
         db.create_all()
         
         # Create super admin if not exists
@@ -276,7 +248,6 @@ def admin_dashboard():
     if current_user.role != 'admin':
         return redirect(url_for('login'))
     
-    # Get all data
     admin_profile = Admin.query.filter_by(user_id=current_user.id).first()
     educators = Educator.query.all()
     parents = Parent.query.all()
@@ -285,7 +256,6 @@ def admin_dashboard():
     assignments = TestAssignment.query.all()
     results = TestResult.query.all()
     
-    # Calculate statistics
     stats = {
         'total_educators': len(educators),
         'total_parents': len(parents),
@@ -560,7 +530,6 @@ def test_results(result_id):
     learner = assignment.learner
     educator = assignment.educator
     
-    # Check permissions
     if current_user.role == 'learner':
         learner_user = Learner.query.filter_by(user_id=current_user.id).first()
         if assignment.learner_id != learner_user.id:
@@ -572,7 +541,6 @@ def test_results(result_id):
     elif current_user.role == 'educator':
         if assignment.educator_id != educator.id:
             return redirect(url_for('login'))
-    # Admin can view all results
     
     question_review = []
     for i, question in enumerate(questions):
@@ -593,8 +561,6 @@ def test_results(result_id):
                          game=game,
                          learner=learner,
                          educator=educator,
-                         questions=questions,
-                         user_answers=user_answers,
                          question_review=question_review,
                          total_points=len(questions) * 2)
 
@@ -670,45 +636,8 @@ def logout():
     flash('You have been logged out', 'success')
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Create admin if not exists
-        admin = User.query.filter_by(email='admin@edubridge.com').first()
-        if not admin:
-            admin = User(
-                email='admin@edubridge.com',
-                name='Super Admin',
-                role='admin'
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.flush()
-            
-            admin_profile = Admin(
-                user_id=admin.id,
-                employee_id='ADMIN001',
-                department='System Administration'
-            )
-            db.session.add(admin_profile)
-            db.session.commit()
-            print("Admin user created")
-        
-        # Add games if not exists
-        games_data = get_all_games()
-        for game_data in games_data:
-            game = Game.query.filter_by(name=game_data['name']).first()
-            if not game:
-                game = Game(
-                    name=game_data['name'],
-                    description=game_data['description'],
-                    category=game_data.get('category', 'General'),
-                    questions=json.dumps(game_data['questions']),
-                    passing_score=15,
-                    time_limit_minutes=60
-                )
-                db.session.add(game)
-        db.session.commit()
-    
+# ==================== RUN THE APP ====================
+
+if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
