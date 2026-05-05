@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Edit User{% endblock %}
+
+{% block content %}
+<style>
+    .edit-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    .help-text {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="edit-container">
+    <h2 style="color: #667eea; margin-bottom: 30px;">Edit User: {{ user.name }}</h2>
+    <p>Role: <strong>{{ user.role|capitalize }}</strong></p>
+    
+    <form method="POST">
+        <!-- Basic Information -->
+        <h3 style="color: #667eea; margin: 20px 0 15px;">Basic Information</h3>
+        
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" value="{{ user.name }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" value="{{ user.email }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" id="address" name="address" value="{{ user.address or '' }}">
+        </div>
+        
+        <!-- Role-Specific Fields -->
+        <h3 style="color: #667eea; margin: 20px 0 15px;">Role-Specific Information</h3>
+        
+        {% if user.role == 'educator' %}
+        <div class="form-group">
+            <label for="phone_number">Contact Phone</label>
+            <input type="tel" id="phone_number" name="phone_number" value="{{ profile.phone_number }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="grade_teaching">Teaching Grade</label>
+            <select id="grade_teaching" name="grade_teaching" required>
+                <option value="1" {% if profile.grade_teaching == 1 %}selected{% endif %}>Grade 1</option>
+                <option value="2" {% if profile.grade_teaching == 2 %}selected{% endif %}>Grade 2</option>
+                <option value="3" {% if profile.grade_teaching == 3 %}selected{% endif %}>Grade 3</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="qualification">Qualification</label>
+            <input type="text" id="qualification" name="qualification" value="{{ profile.qualification or '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="school">School Name</label>
+            <input type="text" id="school" name="school" value="{{ profile.school or '' }}">
+        </div>
+        
+        {% elif user.role == 'parent' %}
+        <div class="form-group">
+            <label for="id_number">ID Number</label>
+            <input type="text" id="id_number" value="{{ profile.id_number }}" readonly disabled>
+            <div class="help-text">ID number cannot be changed</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="occupation">Occupation</label>
+            <input type="text" id="occupation" name="occupation" value="{{ profile.occupation or '' }}">
+        </div>
+        
+        {% elif user.role == 'learner' %}
+        <div class="form-group">
+            <label for="id_number">ID Number</label>
+            <input type="text" id="id_number" value="{{ profile.id_number }}" readonly disabled>
+            <div class="help-text">ID number cannot be changed</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="grade">Grade</label>
+            <select id="grade" name="grade" required>
+                <option value="1" {% if profile.grade == 1 %}selected{% endif %}>Grade 1</option>
+                <option value="2" {% if profile.grade == 2 %}selected{% endif %}>Grade 2</option>
+                <option value="3" {% if profile.grade == 3 %}selected{% endif %}>Grade 3</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="school">School Name</label>
+            <input type="text" id="school" name="school" value="{{ profile.school or '' }}">
+        </div>
+        
+        {% endif %}
+        
+        <!-- Password Change -->
+        <h3 style="color: #667eea; margin: 20px 0 15px;">Change Password (Optional)</h3>
+        
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current password">
+            <div class="help-text">Enter a new password only if you want to change it</div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn-save">Save Changes</button>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

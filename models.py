@@ -14,7 +14,11 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(200), nullable=True)
+    profile_picture = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -39,6 +43,8 @@ class Educator(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     grade_teaching = db.Column(db.Integer, nullable=False)
+    qualification = db.Column(db.String(100), nullable=True)
+    school = db.Column(db.String(100), nullable=True)
     
     user = db.relationship('User', backref='educator_profile')
 
@@ -48,6 +54,7 @@ class Parent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     id_number = db.Column(db.String(13), unique=True, nullable=False)
+    occupation = db.Column(db.String(100), nullable=True)
     
     user = db.relationship('User', backref='parent_profile')
     learners = db.relationship('Learner', backref='parent', lazy='dynamic')
@@ -58,9 +65,12 @@ class Learner(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     id_number = db.Column(db.String(13), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    date_of_birth = db.Column(db.DateTime, nullable=False)
     age = db.Column(db.Integer, nullable=False)
     grade = db.Column(db.Integer, nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey('parents.id'), nullable=False)
+    school = db.Column(db.String(100), nullable=True)
     
     user = db.relationship('User', backref='learner_profile')
 

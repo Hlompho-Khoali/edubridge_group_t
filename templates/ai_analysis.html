@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}AI Learning Analysis{% endblock %}
+
+{% block content %}
+<style>
+    .analysis-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .summary-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .summary-card h3 {
+        color: #667eea;
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+    
+    .assessment-box {
+        background: #e7f3ff;
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .strength-card {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+    
+    .weakness-card {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+    
+    .recommendation-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+    
+    .recommendation-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .priority-high {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .priority-medium {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .priority-low {
+        border-left: 4px solid #28a745;
+    }
+    
+    .category-score {
+        margin-bottom: 15px;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 25px;
+        background: #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 8px 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .level-strong { color: #28a745; font-weight: bold; }
+    .level-developing { color: #ffc107; font-weight: bold; }
+    .level-needs { color: #dc3545; font-weight: bold; }
+    
+    .motivation-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    @media (max-width: 768px) {
+        .summary-cards {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="analysis-header">
+    <h2>AI Learning Analysis</h2>
+    <p>Personalized insights based on your test performance</p>
+    <p>Learner: {{ learner.user.name }} | Age: {{ learner.age }} | Grade: {{ learner.grade }}</p>
+</div>
+
+<!-- Summary Statistics -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <h3>{{ analysis.summary.total_tests }}</h3>
+        <p>Tests Completed</p>
+    </div>
+    <div class="summary-card">
+        <h3>{{ analysis.summary.average_score }}%</h3>
+        <p>Average Score</p>
+    </div>
+    <div class="summary-card">
+        <h3>{{ analysis.summary.best_score }}%</h3>
+        <p>Best Score</p>
+    </div>
+    <div class="summary-card">
+        <h3>
+            {% if analysis.summary.improving is none %}
+                N/A
+            {% elif analysis.summary.improving %}
+                ↑
+            {% else %}
+                ↓
+            {% endif %}
+        </h3>
+        <p>
+            {% if analysis.summary.improving is none %}
+                Trend: Not enough data
+            {% elif analysis.summary.improving %}
+                Trend: Improving
+            {% else %}
+                Trend: Needs attention
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Overall Assessment -->
+<div class="assessment-box">
+    <h3>Overall Assessment</h3>
+    <p>{{ analysis.overall_assessment }}</p>
+    <p><small>Analysis Date: {{ analysis.analysis_date }}</small></p>
+</div>
+
+<!-- Category Analysis -->
+<h3 style="color: #667eea; margin-bottom: 20px;">Skill Breakdown</h3>
+<div class="category-analysis">
+    {% for category, data in analysis.category_analysis.items() %}
+    <div class="category-score">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span><strong>{{ data.name }}</strong></span>
+            <span>
+                <span class="level-
+                    {% if data.level == 'Strong' %}strong
+                    {% elif data.level == 'Developing' %}developing
+                    {% else %}needs{% endif %}">
+                    {{ data.level }}
+                </span>
+                - {{ data.average }}%
+            </span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ data.average }}%">
+                {{ "%.0f"|format(data.average) }}%
+            </div>
+        </div>
+        <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">{{ data.explanation }}</p>
+        <p style="font-size: 0.85rem; margin-top: 5px;">
+            <strong>Tip:</strong> {{ data.tips[0] }}
+        </p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if analysis.category_analysis|length == 0 %}
+<div class="assessment-box">
+    <p>Complete more tests to see detailed skill breakdown!</p>
+</div>
+{% endif %}
+
+<!-- Strengths -->
+{% if analysis.strengths %}
+<h3 style="color: #28a745; margin: 30px 0 20px;">Your Strengths</h3>
+{% for strength in analysis.strengths %}
+<div class="strength-card">
+    {% if strength.category %}
+        <strong>{{ strength.name }}</strong> - Score: {{ strength.score }}%
+        <p>{{ strength.message }}</p>
+    {% else %}
+        <p>{{ strength.message }}</p>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Areas for Improvement -->
+{% if analysis.weaknesses %}
+<h3 style="color: #ffc107; margin: 30px 0 20px;">Areas to Focus On</h3>
+{% for weakness in analysis.weaknesses %}
+<div class="weakness-card">
+    <strong>{{ weakness.name }}</strong> - Current Score: {{ weakness.score }}%
+    <p>{{ weakness.message }}</p>
+    <ul style="margin-top: 10px; margin-left: 20px;">
+        {% for tip in weakness.tips %}
+        <li>{{ tip }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- AI Recommendations -->
+<h3 style="color: #667eea; margin: 30px 0 20px;">Personalized Recommendations</h3>
+{% for rec in analysis.recommendations %}
+<div class="recommendation-card priority-{{ rec.priority|lower }}">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <strong>{{ rec.area }}</strong>
+        <span class="badge" style="
+            {% if rec.priority == 'High' %}background:#dc3545; color:white;
+            {% elif rec.priority == 'Medium' %}background:#ffc107; color:#333;
+            {% else %}background:#28a745; color:white;{% endif %}
+            padding: 3px 10px; border-radius: 20px; font-size: 0.75rem;">
+            {{ rec.priority }} Priority
+        </span>
+    </div>
+    <p style="margin-top: 10px;">{{ rec.recommendation }}</p>
+    <p style="margin-top: 8px;"><strong>Action:</strong> {{ rec.action }}</p>
+    <p style="margin-top: 5px; color: #666; font-size: 0.85rem;">{{ rec.expected_improvement }}</p>
+</div>
+{% endfor %}
+
+<!-- Motivation -->
+<div class="motivation-box">
+    <h3>{{ analysis.motivation }}</h3>
+</div>
+
+<!-- Test History Table -->
+<h3 style="color: #667eea; margin: 30px 0 20px;">Your Test History</h3>
+<div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Test Name</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Category</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Score</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Percentage</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Result</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Date</th>
+                <th style="padding: 12px; text-align: left; background: #f5f7fa;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in test_results %}
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ item.game.name }}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ item.game.category }}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ item.score }}/30</td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                    <div class="progress-bar" style="height: 20px;">
+                        <div class="progress-fill" style="width: {{ item.percentage }}%; font-size: 0.7rem;">
+                            {{ "%.0f"|format(item.percentage) }}%
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                    {% if item.passed %}
+                        <span style="color: #28a745;">Passed</span>
+                    {% else %}
+                        <span style="color: #dc3545;">Failed</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ item.date.strftime('%Y-%m-%d') if item.date else 'N/A' }}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                    <a href="{{ url_for('test_results', result_id=item.result.id) }}" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;">View Details</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="padding: 12px; text-align: center;">No tests completed yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ url_for('learner_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+</div>
+{% endblock %}

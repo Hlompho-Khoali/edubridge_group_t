@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .profile-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        width: 150px;
+        color: #667eea;
+    }
+    
+    .info-value {
+        flex: 1;
+        color: #333;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .role-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    
+    .role-educator { background: #d4edda; color: #155724; }
+    .role-parent { background: #fff3cd; color: #856404; }
+    .role-learner { background: #d1ecf1; color: #0c5460; }
+    .role-admin { background: #f8d7da; color: #721c24; }
+</style>
+
+<div class="profile-header">
+    <h2>My Profile</h2>
+    <p>View and manage your account information</p>
+</div>
+
+<div class="profile-info">
+    <h3 style="color: #667eea; margin-bottom: 20px;">Account Information</h3>
+    
+    <div class="info-row">
+        <div class="info-label">Name:</div>
+        <div class="info-value">{{ user.name }}</div>
+    </div>
+    
+    <div class="info-row">
+        <div class="info-label">Email:</div>
+        <div class="info-value">{{ user.email }}</div>
+    </div>
+    
+    <div class="info-row">
+        <div class="info-label">Role:</div>
+        <div class="info-value">
+            {{ user.role|capitalize }}
+            <span class="role-badge role-{{ user.role }}">{{ user.role|upper }}</span>
+        </div>
+    </div>
+    
+    <div class="info-row">
+        <div class="info-label">Phone:</div>
+        <div class="info-value">{{ user.phone or 'Not provided' }}</div>
+    </div>
+    
+    <div class="info-row">
+        <div class="info-label">Address:</div>
+        <div class="info-value">{{ user.address or 'Not provided' }}</div>
+    </div>
+    
+    <div class="info-row">
+        <div class="info-label">Member Since:</div>
+        <div class="info-value">{{ user.created_at.strftime('%Y-%m-%d') }}</div>
+    </div>
+</div>
+
+{% if role_data %}
+<div class="profile-info">
+    <h3 style="color: #667eea; margin-bottom: 20px;">Role-Specific Information</h3>
+    
+    {% if user.role == 'educator' %}
+    <div class="info-row">
+        <div class="info-label">Phone Number:</div>
+        <div class="info-value">{{ role_data.phone_number }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Teaching Grade:</div>
+        <div class="info-value">Grade {{ role_data.grade_teaching }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Qualification:</div>
+        <div class="info-value">{{ role_data.qualification or 'Not provided' }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">School:</div>
+        <div class="info-value">{{ role_data.school or 'Not provided' }}</div>
+    </div>
+    
+    {% elif user.role == 'parent' %}
+    <div class="info-row">
+        <div class="info-label">ID Number:</div>
+        <div class="info-value">{{ role_data.id_number }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Occupation:</div>
+        <div class="info-value">{{ role_data.occupation or 'Not provided' }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Children:</div>
+        <div class="info-value">
+            {% set children = role_data.learners.all() %}
+            {% if children %}
+                {% for child in children %}
+                    {{ child.user.name }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            {% else %}
+                No children registered
+            {% endif %}
+        </div>
+    </div>
+    
+    {% elif user.role == 'learner' %}
+    <div class="info-row">
+        <div class="info-label">ID Number:</div>
+        <div class="info-value">{{ role_data.id_number }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Date of Birth:</div>
+        <div class="info-value">{{ role_data.date_of_birth.strftime('%Y-%m-%d') }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Age:</div>
+        <div class="info-value">{{ role_data.age }} years</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Grade:</div>
+        <div class="info-value">Grade {{ role_data.grade }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">School:</div>
+        <div class="info-value">{{ role_data.school or 'Not provided' }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Parent:</div>
+        <div class="info-value">{{ role_data.parent.user.name }}</div>
+    </div>
+    
+    {% elif user.role == 'admin' %}
+    <div class="info-row">
+        <div class="info-label">Employee ID:</div>
+        <div class="info-value">{{ role_data.employee_id }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Department:</div>
+        <div class="info-value">{{ role_data.department or 'Not provided' }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="btn-group">
+    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+    <button onclick="confirmDelete()" class="btn btn-danger" style="background: #dc3545; color: white;">Delete Account</button>
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+</div>
+
+<form id="deleteForm" method="POST" action="{{ url_for('delete_profile') }}" style="display: none;">
+    <input type="hidden" name="confirmed" value="yes">
+</form>
+
+<script>
+    function confirmDelete() {
+        if (confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
+            if (confirm('WARNING: All your data will be permanently deleted. Type "DELETE" to confirm.')) {
+                let confirmation = prompt('Type "DELETE" to confirm account deletion:');
+                if (confirmation === 'DELETE') {
+                    document.getElementById('deleteForm').submit();
+                } else {
+                    alert('Deletion cancelled');
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

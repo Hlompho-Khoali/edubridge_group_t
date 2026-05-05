@@ -21,7 +21,7 @@
         color: #333;
     }
     
-    input {
+    input, select {
         width: 100%;
         padding: 10px;
         border: 1px solid #ddd;
@@ -64,13 +64,12 @@
     
     <div class="warning-box">
         Important: You will need your parent's ID number to register.
-        Your South African ID number (13 digits) will be used to determine your age and grade.
+        Your South African ID number (13 digits) will be used to verify your age.
         Learners must be between 6 and 12 years old.
     </div>
     
     <div class="info-box">
-        Your South African ID number (13 digits) contains your date of birth.
-        The system will automatically calculate your age and assign you to the appropriate grade.
+        Your email address will be used for login. Select your grade (1-3) based on your current school grade.
     </div>
     
     <form method="POST">
@@ -80,9 +79,26 @@
         </div>
         
         <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+            <div class="help-text">Use this email to login to your account</div>
+        </div>
+        
+        <div class="form-group">
             <label for="id_number">South African ID Number (13 digits)</label>
             <input type="text" id="id_number" name="id_number" required placeholder="Enter your 13-digit ID number" maxlength="13" pattern="[0-9]{13}">
-            <div class="help-text">Example: 0501011234089 (YYMMDD followed by 7 digits)</div>
+            <div class="help-text">Example: 1401016009087 (YYMMDD followed by 7 digits)</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="grade">Select Your Grade</label>
+            <select id="grade" name="grade" required>
+                <option value="">Select grade</option>
+                <option value="1">Grade 1</option>
+                <option value="2">Grade 2</option>
+                <option value="3">Grade 3</option>
+            </select>
+            <div class="help-text">Choose the grade you are currently in (1-3)</div>
         </div>
         
         <div class="form-group">
@@ -94,6 +110,7 @@
         <div class="form-group">
             <label for="password">Create Password</label>
             <input type="password" id="password" name="password" required placeholder="Create a password">
+            <div class="help-text">Choose a strong password</div>
         </div>
         
         <button type="submit" class="btn btn-primary btn-register">Register</button>

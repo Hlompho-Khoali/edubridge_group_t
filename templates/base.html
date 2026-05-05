@@ -50,6 +50,7 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .nav-links a {
@@ -63,6 +64,11 @@
         .nav-links a:hover {
             background: #f0f0f0;
             color: #667eea;
+        }
+
+        .welcome-text {
+            color: #667eea;
+            font-weight: bold;
         }
 
         .main-content {
@@ -132,6 +138,15 @@
             background: #5a6268;
         }
 
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -171,19 +186,27 @@
             </div>
             <div class="nav-links">
                 {% if current_user.is_authenticated %}
-                    <span>Welcome, {{ current_user.name }}</span>
-                    <a href="{{ url_for('view_all_games') }}">Games</a>
+                    <span class="welcome-text">Welcome, {{ current_user.name }}</span>
+                    
+                    <!-- Games link is HIDDEN for learners -->
+                    {% if current_user.role != 'learner' %}
+                        <a href="{{ url_for('view_all_games') }}">Games Library</a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('view_profile') }}">My Profile</a>
+                    
                     {% if current_user.role == 'educator' %}
                         <a href="{{ url_for('educator_dashboard') }}">Dashboard</a>
                     {% elif current_user.role == 'parent' %}
                         <a href="{{ url_for('parent_dashboard') }}">Dashboard</a>
                     {% elif current_user.role == 'learner' %}
-                        <a href="{{ url_for('learner_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('learner_dashboard') }}">My Tests</a>
+                        <a href="{{ url_for('ai_analysis') }}">AI Analysis</a>
                     {% elif current_user.role == 'admin' %}
                         <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
                         <a href="{{ url_for('admin_users') }}">Users</a>
-                        <a href="{{ url_for('admin_games') }}">Games</a>
-                        <a href="{{ url_for('admin_results') }}">Results</a>
+                        <a href="{{ url_for('admin_games') }}">Manage Games</a>
+                        <a href="{{ url_for('admin_results') }}">All Results</a>
                     {% endif %}
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}

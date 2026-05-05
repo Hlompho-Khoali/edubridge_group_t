@@ -41,6 +41,20 @@
         color: white;
     }
     
+    .btn-edit {
+        background: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        margin-right: 5px;
+    }
+    
+    .btn-edit:hover {
+        background: #218838;
+    }
+    
     .btn-delete {
         background: #dc3545;
         color: white;
@@ -91,7 +105,10 @@
             <td>{{ educator.user.email }}</td>
             <td>{{ educator.phone_number }}</td>
             <td>Grade {{ educator.grade_teaching }}</td>
-            <td><a href="{{ url_for('admin_delete_user', user_id=educator.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a></td>
+            <td>
+                <a href="{{ url_for('admin_edit_user', user_id=educator.user.id) }}" class="btn-edit">Edit</a>
+                <a href="{{ url_for('admin_delete_user', user_id=educator.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
@@ -106,7 +123,10 @@
             <td>{{ parent.user.name }}</td>
             <td>{{ parent.user.email }}</td>
             <td>{{ parent.id_number }}</td>
-            <td><a href="{{ url_for('admin_delete_user', user_id=parent.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a></td>
+            <td>
+                <a href="{{ url_for('admin_edit_user', user_id=parent.user.id) }}" class="btn-edit">Edit</a>
+                <a href="{{ url_for('admin_delete_user', user_id=parent.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
@@ -114,16 +134,20 @@
 
 <h3 class="section-title">Learners</h3>
 <table class="user-table">
-    <thead><tr><th>Name</th><th>ID Number</th><th>Age</th><th>Grade</th><th>Parent</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Name</th><th>Email</th><th>ID Number</th><th>Age</th><th>Grade</th><th>Parent</th><th>Actions</th></tr></thead>
     <tbody>
         {% for learner in learners %}
         <tr>
             <td>{{ learner.user.name }}</td>
+            <td>{{ learner.email }}</td>
             <td>{{ learner.id_number }}</td>
             <td>{{ learner.age }}</td>
             <td>Grade {{ learner.grade }}</td>
             <td>{{ learner.parent.user.name }}</td>
-            <td><a href="{{ url_for('admin_delete_user', user_id=learner.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a></td>
+            <td>
+                <a href="{{ url_for('admin_edit_user', user_id=learner.user.id) }}" class="btn-edit">Edit</a>
+                <a href="{{ url_for('admin_delete_user', user_id=learner.user.id) }}" class="btn-delete" onclick="return confirm('Delete this user?')">Delete</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
