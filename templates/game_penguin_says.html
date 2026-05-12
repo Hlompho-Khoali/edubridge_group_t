@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}🐧 Penguin Says{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .penguin {
+        font-size: 8rem;
+        margin: 20px;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .instruction {
+        font-size: 2rem;
+        font-weight: bold;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px;
+    }
+    
+    .instruction-speak {
+        background: #667eea;
+        color: white;
+    }
+    
+    .instruction-no {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin: 30px;
+    }
+    
+    .tap-btn {
+        background: #48bb78;
+        color: white;
+        padding: 20px 40px;
+        font-size: 1.5rem;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+    }
+    
+    .no-tap-btn {
+        background: #e53e3e;
+        color: white;
+        padding: 20px 40px;
+        font-size: 1.5rem;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+    }
+    
+    .next-btn {
+        background: #667eea;
+        color: white;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        margin: 10px;
+    }
+    
+    .score-board {
+        display: flex;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .message {
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px;
+        font-size: 1.2rem;
+    }
+    
+    .correct { background: #d4edda; color: #155724; }
+    .wrong { background: #f8d7da; color: #721c24; }
+    
+    .celebration {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 50px;
+        border-radius: 30px;
+        font-size: 2rem;
+        text-align: center;
+        z-index: 1000;
+        animation: pop 0.5s ease;
+    }
+    
+    @keyframes pop {
+        0% { transform: translate(-50%, -50%) scale(0); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+</style>
+
+<div class="game-container">
+    <div class="penguin">🐧</div>
+    <h1>Penguin Says</h1>
+    <p>Only do what Penguin SAYS! If Penguin doesn't say it, DON'T do it!</p>
+    
+    <div class="score-board">
+        <div>Score: <span id="score">0</span>/<span id="total">10</span></div>
+        <div>Round: <span id="round">1</span>/<span id="maxRound">10</span></div>
+    </div>
+    
+    <div class="instruction" id="instruction">Ready?</div>
+    
+    <div class="buttons">
+        <button class="tap-btn" onclick="makeChoice('tap')">✅ TAP / YES</button>
+        <button class="no-tap-btn" onclick="makeChoice('no')">❌ DON'T TAP / NO</button>
+    </div>
+    
+    <div class="message" id="message"></div>
+    <button class="next-btn" id="nextBtn" style="display:none;" onclick="nextRound()">Next Round →</button>
+</div>
+
+<script>
+    const rounds = [
+        { text: "Penguin says: Touch your nose!", shouldTap: true },
+        { text: "Jump up and down!", shouldTap: false },
+        { text: "Penguin says: Clap your hands!", shouldTap: true },
+        { text: "Stand up!", shouldTap: false },
+        { text: "Penguin says: Smile!", shouldTap: true },
+        { text: "Wave your hand!", shouldTap: false },
+        { text: "Penguin says: Blink your eyes!", shouldTap: true },
+        { text: "Stomp your feet!", shouldTap: false },
+        { text: "Penguin says: Say 'Hi'!", shouldTap: true },
+        { text: "Turn around!", shouldTap: false }
+    ];
+    
+    let currentRound = 0;
+    let score = 0;
+    let waitingForNext = false;
+    
+    function loadRound() {
+        if (currentRound >= rounds.length) {
+            finishGame();
+            return;
+        }
+        
+        document.getElementById('round').innerText = currentRound + 1;
+        document.getElementById('instruction').innerHTML = rounds[currentRound].text;
+        document.getElementById('instruction').className = 'instruction instruction-speak';
+        document.getElementById('message').innerHTML = '';
+        document.getElementById('message').className = 'message';
+        document.getElementById('nextBtn').style.display = 'none';
+        waitingForNext = false;
+    }
+    
+    function makeChoice(choice) {
+        if (waitingForNext) return;
+        
+        const round = rounds[currentRound];
+        const isCorrect = (choice === 'tap' && round.shouldTap) || (choice === 'no' && !round.shouldTap);
+        
+        waitingForNext = true;
+        
+        if (isCorrect) {
+            score++;
+            document.getElementById('score').innerText = score;
+            document.getElementById('message').innerHTML = '✅ Correct! Great job following instructions! ✅';
+            document.getElementById('message').className = 'message correct';
+        } else {
+            document.getElementById('message').innerHTML = '❌ Oops! ' + (round.shouldTap ? 'Penguin SAID to do it!' : 'Penguin did NOT say to do that!') + ' ❌';
+            document.getElementById('message').className = 'message wrong';
+        }
+        
+        document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+    
+    function nextRound() {
+        currentRound++;
+        loadRound();
+    }
+    
+    function finishGame() {
+        const percent = (score / rounds.length) * 100;
+        const passed = percent >= 70;
+        
+        let message = '';
+        if (passed) {
+            message = `🎉 PERFECT! You scored ${score}/${rounds.length} (${percent}%)! 🎉<br>You're a great listener!`;
+            sendCompletion();
+        } else {
+            message = `Good try! You scored ${score}/${rounds.length} (${percent}%).<br>Let's play again to improve!`;
+        }
+        
+        const celebration = document.createElement('div');
+        celebration.className = 'celebration';
+        celebration.innerHTML = message;
+        document.body.appendChild(celebration);
+        
+        setTimeout(() => {
+            celebration.remove();
+            window.location.href = '/learner/dashboard';
+        }, 3000);
+    }
+    
+    function sendCompletion() {
+        fetch('/game/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_id: 14, score: score, attempts: currentRound })
+        });
+    }
+    
+    loadRound();
+</script>
+{% endblock %}

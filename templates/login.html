@@ -21,7 +21,7 @@
         color: #333;
     }
     
-    input, select {
+    input {
         width: 100%;
         padding: 10px;
         border: 1px solid #ddd;
@@ -46,46 +46,37 @@
         margin: 0 10px;
     }
     
-    .info-box {
-        background: #e7f3ff;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        font-size: 0.85rem;
+    .helper-text {
+        color: #666;
+        font-size: 0.8rem;
+        margin-top: 5px;
+        display: block;
+    }
+    
+    .learner-link {
+        text-align: center;
+        margin-top: 15px;
+    }
+    
+    .learner-link a {
+        color: #667eea;
+        text-decoration: none;
     }
 </style>
 
 <div class="login-container">
     <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Login to EduBridge</h2>
     
-    <div class="info-box">
-        <strong>Login Options:</strong><br>
-        • <strong>Learners:</strong> Use your email address OR your ID number<br>
-        • <strong>Parents:</strong> Use your email address<br>
-        • <strong>Educators:</strong> Use your email address<br>
-        • <strong>Admin:</strong> Use admin@edubridge.com
-    </div>
-    
     <form method="POST">
         <div class="form-group">
-            <label for="email">Email or ID Number</label>
-            <input type="text" id="email" name="email" required placeholder="Enter your email or ID number">
+            <label for="email">Email Address</label>
+            <input type="text" id="email" name="email" required placeholder="Enter your email address">
+            <small class="helper-text">Learners can also use their 13-digit ID number</small>
         </div>
         
         <div class="form-group">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required placeholder="Enter your password">
-        </div>
-        
-        <div class="form-group">
-            <label for="role">Select Your Role</label>
-            <select id="role" name="role" required>
-                <option value="">Choose your role</option>
-                <option value="learner">Learner</option>
-                <option value="parent">Parent</option>
-                <option value="educator">Educator</option>
-                <option value="admin">Admin</option>
-            </select>
         </div>
         
         <button type="submit" class="btn btn-primary btn-login">Login</button>
@@ -94,8 +85,11 @@
     <div class="register-links">
         <p>New to EduBridge?</p>
         <a href="{{ url_for('register_educator') }}">Register as Educator</a> |
-        <a href="{{ url_for('register_parent') }}">Register as Parent</a> |
-        <a href="{{ url_for('register_learner') }}">Register as Learner</a>
+        <a href="{{ url_for('register_parent') }}">Register as Parent</a>
+    </div>
+    
+    <div class="learner-link">
+        <a href="{{ url_for('learner_login') }}">Learner Login (6-digit code)</a>
     </div>
 </div>
 {% endblock %}

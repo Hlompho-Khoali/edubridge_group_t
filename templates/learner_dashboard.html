@@ -239,7 +239,7 @@
 
 <div class="welcome-card">
     <h2>Hello, {{ current_user.name }}! 👋</h2>
-    <p>Welcome to your learning dashboard. Complete your assigned tests and track your progress!</p>
+    <p>Welcome to your learning dashboard. Play games, complete challenges, and track your progress!</p>
     <p style="margin-top: 10px;">📌 <strong>Your Learner ID:</strong> {{ learner.id_number }} | <strong>Grade:</strong> {{ learner.grade }}</p>
 </div>
 
@@ -263,7 +263,7 @@
     </div>
 </div>
 
-<h3 class="section-title">📋 Available Tests</h3>
+<h3 class="section-title">🎮 Your Learning Path</h3>
 
 {% if available_tests %}
     <div class="grid-2">
@@ -281,26 +281,30 @@
             </div>
             
             {% if item.assignment.status == 'in_progress' %}
-                <div class="time-limit">
-                    ⚠️ You have started this test! Time is running out. Please complete it within the time limit.
-                </div>
-                <a href="{{ url_for('start_test', assignment_id=item.assignment.id) }}" class="btn-start" style="margin-top: 15px; display: inline-block;">Continue Test →</a>
-            {% else %}
-                <a href="{{ url_for('start_test', assignment_id=item.assignment.id) }}" class="btn-start" style="margin-top: 15px; display: inline-block;">Start Test →</a>
-            {% endif %}
+    <div class="time-limit">
+        ⚠️ You have started this test! Time is running out. Please complete it within the time limit.
+    </div>
+    <a href="{{ url_for('start_test', assignment_id=item.assignment.id) }}" class="btn-start" style="margin-top: 15px; display: inline-block;">Continue Test →</a>
+{% else %}
+    {% if item.assignment %}
+        <a href="{{ url_for('start_test', assignment_id=item.assignment.id) }}" class="btn-start">Start Test →</a>
+    {% else %}
+        <a href="{{ url_for('memory_match_game') }}" class="btn-start">🐘 Play Memory Match →</a>
+    {% endif %}
+{% endif %}
         </div>
         {% endfor %}
     </div>
 {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon"></div>
-        <h3>No Tests Available</h3>
-        <p>Your educator hasn't assigned any tests to you yet.</p>
-        <p>Check back later once your teacher assigns some games!</p>
-    </div>
+    <div class="empty-state-icon">🏆</div>
+    <h3>All Games Completed!</h3>
+    <p>Congratulations! You've finished all available games.</p>
+    <p>Ask your teacher for more challenges or replay games to improve your score!</p>
+</div>
 {% endif %}
 
-<h3 class="section-title">Completed Tests</h3>
+<h3 class="section-title">✅ Completed Challenges</h3>
 
 {% if completed_tests %}
     <div>
@@ -336,15 +340,17 @@
     </div>
     
     <div class="motivation-message">
-        {% set passed_count = completed_tests|selectattr('result.passed', 'equalto', true)|list|length %}
-        {% if passed_count == completed_tests|length and completed_tests|length > 0 %}
-            <p>Amazing work! You passed all your tests! Keep up the great learning!</p>
+    {% set passed_count = completed_tests|selectattr('result.passed', 'equalto', true)|list|length %}
+    {% if completed_tests|length > 0 %}
+        {% if passed_count == completed_tests|length %}
+            <p>🏆 Amazing work! You've mastered all your challenges! Keep playing to earn more stars! 🏆</p>
         {% elif passed_count > 0 %}
-            <p>Great job! You passed {{ passed_count }} out of {{ completed_tests|length }} tests. Keep working hard! </p>
+            <p>⭐ Great job! You passed {{ passed_count }} out of {{ completed_tests|length }} challenges. Keep going! ⭐</p>
         {% else %}
-            <p>Don't give up! Review your answers and try again. Every mistake is a learning opportunity! </p>
+            <p>💪 Don't give up! Every challenge teaches you something new. Review and try again! 💪</p>
         {% endif %}
-    </div>
+    {% endif %}
+</div>
 {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">📊</div>
@@ -354,11 +360,8 @@
     </div>
 {% endif %}
 
-<div style="text-align: center; margin-top: 30px;">
-    <a href="{{ url_for('index') }}" class="btn-secondary" style="padding: 10px 25px; border-radius: 25px; text-decoration: none;">Back to Home</a>
-</div>
-<div style="text-align: center; margin-top: 30px;">
-    <a href="{{ url_for('ai_analysis') }}" class="btn btn-primary">🤖 AI Learning Analysis</a>
-    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+<div style="text-align: center; margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+    <a href="{{ url_for('ai_analysis') }}" class="btn-start" style="padding: 10px 25px; text-decoration: none;">🤖 AI Learning Analysis</a>
+    <a href="{{ url_for('index') }}" class="btn-view" style="padding: 10px 25px; text-decoration: none;">🏠 Back to Home</a>
 </div>
 {% endblock %}

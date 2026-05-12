@@ -1,322 +1,310 @@
-"""
-AI Learning Analyzer for EduBridge
-Analyzes test results, explains performance, and provides recommendations
-"""
-
 import json
 from datetime import datetime
 
-class AILearningAnalyzer:
-    """AI-powered learning analyzer"""
+class AIAnalyzer:
+    """Analyzes game results to generate cognitive and ADHD reports"""
     
-    def __init__(self):
-        self.skill_descriptions = {
-            'Mathematics': {
-                'name': 'Math & Processing Speed',
-                'description': 'How quickly and accurately you solve math problems',
-                'tips': [
-                    'Practice mental math daily',
-                    'Use flashcards for quick recall',
-                    'Play number games'
-                ]
-            },
-            'Pattern Recognition': {
-                'name': 'Pattern Recognition',
-                'description': 'Ability to identify patterns and sequences',
-                'tips': [
-                    'Play pattern matching games',
-                    'Practice completing sequences',
-                    'Look for patterns in everyday life'
-                ]
-            },
-            'Memory': {
-                'name': 'Working Memory',
-                'description': 'Ability to hold and use information temporarily',
-                'tips': [
-                    'Play memory matching games',
-                    'Practice recalling sequences',
-                    'Use visualization techniques'
-                ]
-            },
-            'Attention': {
-                'name': 'Attention & Focus',
-                'description': 'Ability to concentrate and ignore distractions',
-                'tips': [
-                    'Use a timer for focused work',
-                    'Take short breaks between tasks',
-                    'Create a quiet study space'
-                ]
-            },
-            'Response Inhibition': {
-                'name': 'Impulse Control',
-                'description': 'Ability to think before acting',
-                'tips': [
-                    'Practice "stop and think" exercises',
-                    'Count to 3 before answering',
-                    'Play go/no-go games'
-                ]
-            },
-            'Sustained Attention': {
-                'name': 'Sustained Attention',
-                'description': 'Ability to maintain focus over time',
-                'tips': [
-                    'Gradually increase study time',
-                    'Use the Pomodoro technique',
-                    'Remove distractions'
-                ]
-            },
-            'General': {
-                'name': 'General Learning',
-                'description': 'Overall learning abilities',
-                'tips': [
-                    'Practice regularly',
-                    'Get enough sleep',
-                    'Stay positive'
-                ]
-            }
+    def __init__(self, learner, game_results):
+        self.learner = learner
+        self.results = game_results
+        self.age = learner.age
+        
+    def analyze(self):
+        """Main analysis method"""
+        return {
+            'cognitive_scores': self._calculate_cognitive_scores(),
+            'adhd_indicators': self._calculate_adhd_indicators(),
+            'strengths': self._identify_strengths(),
+            'concerns': self._identify_concerns(),
+            'recommendations': self._generate_recommendations(),
+            'summary': self._generate_summary(),
+            'benchmarks': self._get_age_benchmarks()
         }
     
-    def analyze_results(self, test_results, learner_age, learner_grade):
-        """Main analysis function"""
-        if not test_results:
-            return self._get_no_data_analysis()
+    def _calculate_cognitive_scores(self):
+        """Calculate scores for each cognitive domain"""
+        scores = {
+            'attention': 0,
+            'impulse_control': 0,
+            'working_memory': 0,
+            'processing_speed': 0,
+            'problem_solving': 0,
+            'language': 0
+        }
         
-        # Calculate overall performance
-        scores = [r['percentage'] for r in test_results]
-        avg_score = sum(scores) / len(scores)
+        count = {'attention': 0, 'impulse_control': 0, 'working_memory': 0, 
+                 'processing_speed': 0, 'problem_solving': 0, 'language': 0}
         
-        # Analyze by category
-        category_analysis = self._analyze_categories(test_results)
+        for result in self.results:
+            game_name = result.get('game_name', '').lower()
+            score = result.get('percentage', 0)
+            
+            # Map games to cognitive domains
+            if 'penguin' in game_name or 'simon' in game_name:
+                scores['impulse_control'] += score
+                count['impulse_control'] += 1
+            elif 'memory' in game_name or 'recall' in game_name:
+                scores['working_memory'] += score
+                count['working_memory'] += 1
+            elif 'attention' in game_name or 'vigilance' in game_name:
+                scores['attention'] += score
+                count['attention'] += 1
+            elif 'math' in game_name or 'number' in game_name:
+                scores['processing_speed'] += score
+                count['processing_speed'] += 1
+            elif 'puzzle' in game_name or 'tower' in game_name or 'maze' in game_name:
+                scores['problem_solving'] += score
+                count['problem_solving'] += 1
+            elif 'word' in game_name or 'rhyme' in game_name or 'builder' in game_name:
+                scores['language'] += score
+                count['language'] += 1
         
-        # Identify strengths and weaknesses
-        strengths = self._identify_strengths(category_analysis)
-        weaknesses = self._identify_weaknesses(category_analysis)
+        # Calculate averages
+        for key in scores:
+            if count[key] > 0:
+                scores[key] = round(scores[key] / count[key], 1)
+            else:
+                scores[key] = None
+                
+        return scores
+    
+    def _calculate_adhd_indicators(self):
+        """Calculate ADHD risk scores based on performance patterns"""
+        indicators = {
+            'attention_deficit': 0,
+            'hyperactivity': 0,
+            'impulsivity': 0
+        }
         
-        # Generate overall assessment
-        overall_assessment = self._generate_overall_assessment(avg_score, len(test_results))
+        weight_count = {'attention_deficit': 0, 'hyperactivity': 0, 'impulsivity': 0}
         
-        # Generate recommendations
-        recommendations = self._generate_recommendations(weaknesses, strengths, learner_age, learner_grade)
+        for result in self.results:
+            score = result.get('percentage', 0)
+            reaction_time = result.get('reaction_time', 500)  # milliseconds
+            errors = result.get('errors', 0)
+            game_name = result.get('game_name', '').lower()
+            
+            # Attention deficit indicators (low scores on sustained attention games)
+            if 'attention' in game_name or 'vigilance' in game_name:
+                if score < 60:
+                    indicators['attention_deficit'] += (60 - score)
+                weight_count['attention_deficit'] += 1
+            
+            # Hyperactivity indicators (high error rates on "no" responses)
+            if 'penguin' in game_name or 'go/no-go' in game_name:
+                if errors > 3:
+                    indicators['hyperactivity'] += errors * 5
+                weight_count['hyperactivity'] += 1
+            
+            # Impulsivity indicators (fast reaction times with errors)
+            if reaction_time < 300 and errors > 0:
+                indicators['impulsivity'] += (300 - reaction_time) / 10
+                weight_count['impulsivity'] += 1
         
-        # Generate motivational message
-        motivation = self._get_motivational_message(avg_score, len(test_results))
+        # Normalize to 0-100 scale
+        for key in indicators:
+            if weight_count[key] > 0:
+                indicators[key] = min(100, round(indicators[key] / weight_count[key], 1))
+            else:
+                indicators[key] = 0
+        
+        # Overall ADHD risk (weighted average)
+        overall = (
+            indicators['attention_deficit'] * 0.4 +
+            indicators['hyperactivity'] * 0.3 +
+            indicators['impulsivity'] * 0.3
+        )
         
         return {
-            'summary': {
-                'total_tests': len(test_results),
-                'average_score': round(avg_score, 1),
-                'best_score': max(scores),
-                'lowest_score': min(scores),
-                'improving': self._is_improving(scores)
-            },
-            'category_analysis': category_analysis,
-            'strengths': strengths,
-            'weaknesses': weaknesses,
-            'overall_assessment': overall_assessment,
-            'recommendations': recommendations,
-            'motivation': motivation,
-            'analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M')
+            'overall_risk': round(overall, 1),
+            'attention_deficit_risk': indicators['attention_deficit'],
+            'hyperactivity_risk': indicators['hyperactivity'],
+            'impulsivity_risk': indicators['impulsivity']
         }
     
-    def _analyze_categories(self, test_results):
-        """Analyze performance by category"""
-        category_scores = {}
-        category_counts = {}
-        
-        for result in test_results:
-            if result['game']:
-                category = result['game'].category
-                score = result['percentage']
-                
-                if category not in category_scores:
-                    category_scores[category] = []
-                    category_counts[category] = 0
-                
-                category_scores[category].append(score)
-                category_counts[category] += 1
-        
-        analysis = {}
-        for category, scores in category_scores.items():
-            avg = sum(scores) / len(scores)
-            skill_info = self.skill_descriptions.get(category, self.skill_descriptions['General'])
-            
-            if avg >= 70:
-                level = 'Strong'
-                explanation = f"You're doing very well in {skill_info['name']}! {skill_info['description']}."
-            elif avg >= 50:
-                level = 'Developing'
-                explanation = f"You're making good progress in {skill_info['name']}. {skill_info['description']} With more practice, you'll get even better."
-            else:
-                level = 'Needs Attention'
-                explanation = f"{skill_info['name']} is an area to focus on. {skill_info['description']} Don't worry - with practice, you can improve!"
-            
-            analysis[category] = {
-                'name': skill_info['name'],
-                'average': round(avg, 1),
-                'level': level,
-                'explanation': explanation,
-                'tips': skill_info['tips'],
-                'tests_taken': category_counts[category]
-            }
-        
-        return analysis
-    
-    def _identify_strengths(self, category_analysis):
-        """Identify top 3 strengths"""
+    def _identify_strengths(self):
+        """Identify cognitive strengths based on scores"""
+        scores = self._calculate_cognitive_scores()
         strengths = []
-        for category, data in category_analysis.items():
-            if data['average'] >= 65:
+        
+        for domain, score in scores.items():
+            if score and score >= 70:
                 strengths.append({
-                    'category': category,
-                    'name': data['name'],
-                    'score': data['average'],
-                    'message': f"You excel at {data['name']}! Keep up the great work."
+                    'domain': domain.replace('_', ' ').title(),
+                    'score': score,
+                    'message': self._get_strength_message(domain)
                 })
         
-        # Sort by score and take top 3
-        strengths.sort(key=lambda x: x['score'], reverse=True)
-        return strengths[:3] if strengths else [{'message': 'Complete more tests to identify your strengths!'}]
+        if not strengths:
+            strengths.append({
+                'domain': 'Getting Started',
+                'score': 0,
+                'message': 'Complete more games to identify strengths.'
+            })
+        
+        return strengths
     
-    def _identify_weaknesses(self, category_analysis):
-        """Identify areas needing improvement"""
-        weaknesses = []
-        for category, data in category_analysis.items():
-            if data['average'] < 55:
-                weaknesses.append({
-                    'category': category,
-                    'name': data['name'],
-                    'score': data['average'],
-                    'message': f"Let's work on {data['name']}. The good news is that with practice, you can improve significantly!",
-                    'tips': data['tips'][:2]
+    def _identify_concerns(self):
+        """Identify areas needing support"""
+        scores = self._calculate_cognitive_scores()
+        adhd = self._calculate_adhd_indicators()
+        concerns = []
+        
+        for domain, score in scores.items():
+            if score and score < 50:
+                concerns.append({
+                    'domain': domain.replace('_', ' ').title(),
+                    'score': score,
+                    'severity': 'High' if score < 30 else 'Moderate',
+                    'message': self._get_concern_message(domain)
                 })
         
-        # Sort by score (lowest first)
-        weaknesses.sort(key=lambda x: x['score'])
-        return weaknesses[:3] if weaknesses else []
-    
-    def _generate_overall_assessment(self, avg_score, total_tests):
-        """Generate overall performance assessment"""
-        if total_tests < 3:
-            return "You're just getting started! Complete a few more tests to get a detailed analysis of your learning patterns."
+        if adhd['overall_risk'] > 60:
+            concerns.append({
+                'domain': 'ADHD Indicators',
+                'score': adhd['overall_risk'],
+                'severity': 'High',
+                'message': 'Multiple indicators suggest further evaluation may be beneficial.'
+            })
         
-        if avg_score >= 80:
-            return "Excellent work! Your performance is outstanding. You're mastering the material very well. Keep challenging yourself with new games!"
-        elif avg_score >= 70:
-            return "Great job! You're performing above average. Your learning strategies are working well. Keep up the consistent effort!"
-        elif avg_score >= 60:
-            return "Good progress! You're on the right track. With a bit more practice in specific areas, you'll see even better results."
-        elif avg_score >= 50:
-            return "You're making progress! Some areas need more attention, but you're building a solid foundation. Stay persistent!"
-        else:
-            return "Learning takes time and practice. Don't be discouraged! Let's focus on specific areas where small improvements can make a big difference."
+        return concerns
     
-    def _generate_recommendations(self, weaknesses, strengths, age, grade):
-        """Generate personalized learning recommendations"""
+    def _generate_recommendations(self):
+        """Generate personalized recommendations"""
+        scores = self._calculate_cognitive_scores()
+        adhd = self._calculate_adhd_indicators()
         recommendations = []
         
-        # Priority 1: Address weaknesses
-        for weakness in weaknesses[:2]:  # Top 2 weaknesses
+        # Attention recommendations
+        if scores.get('attention', 100) < 55:
             recommendations.append({
                 'priority': 'High',
-                'area': weakness['name'],
-                'recommendation': f"Focus on {weakness['name']}. {weakness['tips'][0]}",
-                'action': f"Practice {weakness['category']} games 2-3 times per week",
-                'expected_improvement': "You could see significant improvement within 2-3 weeks"
+                'area': 'Attention',
+                'recommendation': 'Practice with short, focused activities. Start with 5-minute sessions.',
+                'suggested_games': ['Space Signal Keeper', 'Lookout Keeper'],
+                'expected_improvement': 'Increased sustained attention'
             })
         
-        # Priority 2: Build on strengths
-        if strengths and strengths[0].get('category'):
+        # Impulse control recommendations
+        if scores.get('impulse_control', 100) < 55 or adhd['impulsivity_risk'] > 50:
+            recommendations.append({
+                'priority': 'High',
+                'area': 'Impulse Control',
+                'recommendation': 'Practice "stop and think" strategies before responding.',
+                'suggested_games': ['Penguin Says', 'Red Light, Green Light'],
+                'expected_improvement': 'Better response inhibition'
+            })
+        
+        # Memory recommendations
+        if scores.get('working_memory', 100) < 55:
             recommendations.append({
                 'priority': 'Medium',
-                'area': strengths[0]['name'],
-                'recommendation': f"Build on your strength in {strengths[0]['name']}! Try more challenging games in this category.",
-                'action': "Challenge yourself with advanced level games",
-                'expected_improvement': "Continue to excel and build confidence"
+                'area': 'Working Memory',
+                'recommendation': 'Use visual aids and repetition. Break tasks into smaller steps.',
+                'suggested_games': ['Memory Match', 'Grocery Run'],
+                'expected_improvement': 'Improved recall and retention'
             })
         
-        # Priority 3: General learning tips
-        recommendations.append({
-            'priority': 'Low',
-            'area': 'Study Habits',
-            'recommendation': f"At age {age}, short focused sessions work best. Try 15-20 minute practice sessions.",
-            'action': "Use a timer and take short breaks",
-            'expected_improvement': "Better focus and retention"
-        })
-        
-        # Add age-appropriate tip
-        if age <= 7:
+        # Processing speed recommendations
+        if scores.get('processing_speed', 100) < 55:
             recommendations.append({
-                'priority': 'Low',
-                'area': 'Learning Style',
-                'recommendation': "Young learners benefit from hands-on activities and visual learning.",
-                'action': "Use colorful materials and physical activities while learning",
-                'expected_improvement': "More engaging and enjoyable learning"
+                'priority': 'Medium',
+                'area': 'Processing Speed',
+                'recommendation': 'Allow extra time for tasks. Use timers for practice.',
+                'suggested_games': ['Number Slice', 'Fruit Shop Math'],
+                'expected_improvement': 'Faster processing with practice'
             })
-        elif age <= 10:
+        
+        # Problem-solving recommendations
+        if scores.get('problem_solving', 100) < 55:
             recommendations.append({
                 'priority': 'Low',
-                'area': 'Learning Style',
-                'recommendation': "At this age, mixing digital learning with physical activities works well.",
-                'action': "Alternate between computer games and physical movement breaks",
-                'expected_improvement': "Better sustained attention"
+                'area': 'Problem Solving',
+                'recommendation': 'Encourage step-by-step thinking and verbalizing solutions.',
+                'suggested_games': ['Tower of Hanoi', 'Find the Cheese'],
+                'expected_improvement': 'Better strategic planning'
+            })
+        
+        if not recommendations:
+            recommendations.append({
+                'priority': 'Low',
+                'area': 'Maintenance',
+                'recommendation': 'Continue regular practice to maintain current skill levels.',
+                'suggested_games': ['All games'],
+                'expected_improvement': 'Continued progress'
             })
         
         return recommendations
     
-    def _is_improving(self, scores):
-        """Check if performance is improving over time"""
-        if len(scores) < 3:
-            return None
+    def _generate_summary(self):
+        """Generate a readable summary report"""
+        scores = self._calculate_cognitive_scores()
+        adhd = self._calculate_adhd_indicators()
         
-        # Compare first half to second half
-        mid = len(scores) // 2
-        first_half_avg = sum(scores[:mid]) / mid
-        second_half_avg = sum(scores[mid:]) / (len(scores) - mid)
+        # Determine overall level
+        avg_score = sum([s for s in scores.values() if s]) / len([s for s in scores.values() if s]) if scores else 0
         
-        return second_half_avg > first_half_avg
-    
-    def _get_motivational_message(self, avg_score, total_tests):
-        """Get personalized motivational message"""
-        if total_tests == 0:
-            return "Take your first test to unlock personalized insights and recommendations!"
-        
-        if avg_score >= 80:
-            return "🌟 Amazing work! You're showing excellent understanding. Keep challenging yourself!"
-        elif avg_score >= 70:
-            return "🎉 Great progress! Your hard work is paying off. Keep going!"
-        elif avg_score >= 60:
-            return "📈 You're on the right track! Consistent practice will help you reach your goals."
-        elif avg_score >= 50:
-            return "💪 You're making progress! Every test helps you learn and grow. Stay determined!"
+        if avg_score >= 75:
+            level = "Strong"
+            message = "performing well above expectations"
+        elif avg_score >= 55:
+            level = "Developing"
+            message = "meeting expected milestones"
         else:
-            return "🌱 Learning is a journey. Every test teaches you something new. Don't give up - you've got this!"
+            level = "Support Needed"
+            message = "would benefit from additional support"
+        
+        summary = f"""
+        Based on {len(self.results)} completed games, this learner is {message} for their age ({self.age} years).
+        
+        Cognitive Profile:
+        - Attention: {scores.get('attention', 'Not enough data')}%
+        - Impulse Control: {scores.get('impulse_control', 'Not enough data')}%
+        - Working Memory: {scores.get('working_memory', 'Not enough data')}%
+        - Processing Speed: {scores.get('processing_speed', 'Not enough data')}%
+        - Problem Solving: {scores.get('problem_solving', 'Not enough data')}%
+        - Language: {scores.get('language', 'Not enough data')}%
+        
+        ADHD Indicators: {adhd['overall_risk']}% risk level
+        - Attention Deficit Indicators: {adhd['attention_deficit_risk']}%
+        - Hyperactivity Indicators: {adhd['hyperactivity_risk']}%
+        - Impulsivity Indicators: {adhd['impulsivity_risk']}%
+        
+        Note: This is an AI-generated screening based on game performance.
+        For clinical diagnosis, please consult a qualified healthcare professional.
+        """
+        
+        return summary.strip()
     
-    def _get_no_data_analysis(self):
-        """Return analysis when no test data exists"""
-        return {
-            'summary': {
-                'total_tests': 0,
-                'average_score': 0,
-                'best_score': 0,
-                'lowest_score': 0,
-                'improving': None
-            },
-            'category_analysis': {},
-            'strengths': [{'message': 'Complete your first test to see your strengths!'}],
-            'weaknesses': [],
-            'overall_assessment': "Welcome to EduBridge! Take your first test to get personalized AI analysis of your learning patterns.",
-            'recommendations': [
-                {
-                    'priority': 'High',
-                    'area': 'Getting Started',
-                    'recommendation': 'Complete your first assigned test to begin your learning journey!',
-                    'action': 'Go to your dashboard and start an available test',
-                    'expected_improvement': 'Unlock personalized insights'
-                }
-            ],
-            'motivation': "Ready to start learning? Complete your first test and I'll help you understand your results!",
-            'analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M')
+    def _get_age_benchmarks(self):
+        """Get age-appropriate benchmarks"""
+        benchmarks = {
+            6: {'attention': 55, 'memory': 50, 'processing': 45},
+            7: {'attention': 60, 'memory': 55, 'processing': 50},
+            8: {'attention': 65, 'memory': 60, 'processing': 55},
+            9: {'attention': 70, 'memory': 65, 'processing': 60},
+            10: {'attention': 75, 'memory': 70, 'processing': 65}
         }
-
-# Create global instance
-ai_analyzer = AILearningAnalyzer()
+        return benchmarks.get(self.age, benchmarks.get(8, {'attention': 60, 'memory': 55, 'processing': 50}))
+    
+    def _get_strength_message(self, domain):
+        messages = {
+            'attention': 'Strong ability to focus and sustain attention.',
+            'impulse_control': 'Excellent self-control and response inhibition.',
+            'working_memory': 'Good at holding and manipulating information.',
+            'processing_speed': 'Quick and efficient information processing.',
+            'problem_solving': 'Strong analytical and strategic thinking skills.',
+            'language': 'Excellent verbal and language processing abilities.'
+        }
+        return messages.get(domain, 'Notable strength in this area.')
+    
+    def _get_concern_message(self, domain):
+        messages = {
+            'attention': 'May benefit from strategies to improve focus and reduce distractions.',
+            'impulse_control': 'May benefit from practicing pause-and-think strategies.',
+            'working_memory': 'May benefit from using visual aids and repetition.',
+            'processing_speed': 'May benefit from extra time and breaking tasks into steps.',
+            'problem_solving': 'May benefit from guided practice and verbalizing solutions.',
+            'language': 'May benefit from additional language-rich activities.'
+        }
+        return messages.get(domain, 'May benefit from targeted support in this area.')

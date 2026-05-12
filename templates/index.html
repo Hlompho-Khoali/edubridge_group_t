@@ -6,170 +6,323 @@
 <style>
     .hero {
         text-align: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
+        border-radius: 24px;
         color: white;
-        margin-bottom: 40px;
+        margin-bottom: 50px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero:before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 1%);
+        background-size: 50px 50px;
+        animation: shimmer 20s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
     }
     
     .hero h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
         margin-bottom: 15px;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+        position: relative;
     }
     
     .roles-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 25px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
         margin: 40px 0;
     }
     
     .role-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        border-radius: 15px;
-        padding: 30px;
+        background: white;
+        border-radius: 24px;
+        padding: 35px 25px;
         text-align: center;
-        transition: transform 0.3s ease;
-        cursor: pointer;
+        transition: all 0.3s ease;
         text-decoration: none;
-        color: #333;
+        color: #2d3748;
         display: block;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        cursor: pointer;
     }
     
     .role-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
     }
     
+    .role-card.learner:hover { border-top: 4px solid #48bb78; }
+    .role-card.parent:hover { border-top: 4px solid #ed8936; }
+    .role-card.educator:hover { border-top: 4px solid #667eea; }
+    
     .role-icon {
-        font-size: 3rem;
+        font-size: 2.8rem;
+        margin-bottom: 20px;
+        padding: 15px;
+        display: inline-block;
+        border-radius: 60px;
+    }
+    
+    .role-card.learner .role-icon { background: rgba(72, 187, 120, 0.1); color: #48bb78; }
+    .role-card.parent .role-icon { background: rgba(237, 137, 54, 0.1); color: #ed8936; }
+    .role-card.educator .role-icon { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+    
+    .role-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .role-card .description {
+        font-size: 0.9rem;
+        color: #4a5568;
+        line-height: 1.5;
         margin-bottom: 15px;
     }
     
-    .role-card h3 {
-        color: #667eea;
-        margin-bottom: 10px;
+    .role-card .explanation {
+        font-size: 0.8rem;
+        color: #718096;
+        background: #f7fafc;
+        padding: 10px;
+        border-radius: 12px;
+        margin-top: 15px;
+        line-height: 1.4;
     }
     
     .features-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 25px;
-        margin-top: 30px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin: 50px 0;
     }
     
     .feature {
         text-align: center;
-        padding: 20px;
+        padding: 30px 25px;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .feature:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
     }
     
     .feature-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+        padding: 15px;
+        display: inline-block;
+        border-radius: 60px;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
     }
     
-    .stats-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 15px;
-        padding: 30px;
-        margin-top: 40px;
-        color: white;
+    .feature h4 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        font-weight: 700;
+        color: #2d3748;
     }
     
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 20px;
+    .feature .description {
+        font-size: 0.9rem;
+        color: #4a5568;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+    
+    .feature .explanation {
+        font-size: 0.8rem;
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.08);
+        padding: 10px;
+        border-radius: 12px;
+        margin-top: 15px;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+    
+    .register-section {
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        border-radius: 24px;
+        padding: 45px;
+        margin-top: 50px;
         text-align: center;
+        border: 1px solid #e2e8f0;
     }
     
-    .stat-item h4 {
-        font-size: 2rem;
-        margin-bottom: 5px;
+    .register-section h3 {
+        font-size: 1.6rem;
+        margin-bottom: 10px;
+        color: #2d3748;
+    }
+    
+    .register-section p {
+        color: #718096;
+        margin-bottom: 25px;
     }
     
     .btn-large {
-        padding: 15px 40px;
-        font-size: 1.1rem;
-        margin: 10px;
+        padding: 14px 35px;
+        font-size: 0.95rem;
+        margin: 0 10px;
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 40px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-large:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .note-text {
+        margin-top: 20px;
+        font-size: 0.85rem;
+        color: #a0aec0;
+    }
+    
+    @media (max-width: 768px) {
+        .roles-grid, .features-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero p {
+            font-size: 1rem;
+        }
+        
+        .btn-large {
+            display: block;
+            margin: 10px 20px;
+        }
     }
 </style>
 
 <div class="hero">
-    <h1>🎓 Welcome to EduBridge</h1>
+    <h1>EduBridge</h1>
     <p>Bridging Learning Gaps with Intelligent Support</p>
-    <p style="margin-top: 20px;">Your comprehensive platform for game-based learning, ADHD screening, and educational assessments</p>
+    <p>Game-based learning | ADHD screening | Educational assessments</p>
 </div>
 
-<h2 style="text-align: center; color: #667eea;">Select Your Role to Get Started</h2>
 <div class="roles-grid">
-    <a href="{{ url_for('login') }}" class="role-card">
-        <div class="role-icon"></div>
+    <div class="role-card learner" onclick="window.location.href='{{ url_for('learner_login') }}'">
+        <div class="role-icon">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
         <h3>Learner</h3>
-        <p>Play educational games, take assessments, and track your progress</p>
-    </a>
-    <a href="{{ url_for('login') }}" class="role-card">
-        <div class="role-icon"></div>
+        <div class="description">Access games, complete assessments, track your progress</div>
+        <div class="explanation">
+            <i class="fas fa-key"></i> Login with a 6-digit code. No email or password needed.
+        </div>
+    </div>
+    
+    <div class="role-card parent" onclick="window.location.href='{{ url_for('login') }}'">
+        <div class="role-icon">
+            <i class="fas fa-heart"></i>
+        </div>
         <h3>Parent</h3>
-        <p>Monitor your child's learning journey and view reports</p>
-    </a>
-    <a href="{{ url_for('login') }}" class="role-card">
-        <div class="role-icon"></div>
+        <div class="description">Monitor your child's learning journey and view reports</div>
+        <div class="explanation">
+            <i class="fas fa-chart-line"></i> See completed games, track progress, and celebrate achievements.
+        </div>
+    </div>
+    
+    <div class="role-card educator" onclick="window.location.href='{{ url_for('login') }}'">
+        <div class="role-icon">
+            <i class="fas fa-chalkboard-user"></i>
+        </div>
         <h3>Educator</h3>
-        <p>Assign games, track student progress, and generate insights</p>
-    </a>
-    <a href="{{ url_for('login') }}" class="role-card">
-        <div class="role-icon"></div>
-        <h3>Admin</h3>
-        <p>Manage the platform and oversee all activities</p>
-    </a>
+        <div class="description">Assign games, track student progress, generate insights</div>
+        <div class="explanation">
+            <i class="fas fa-users"></i> Manage your class, assign games, and monitor student performance.
+        </div>
+    </div>
 </div>
 
 <div class="features-grid">
     <div class="feature">
-        <div class="feature-icon"></div>
-        <h4>29 Educational Games</h4>
-        <p>Interactive games targeting cognitive skills and ADHD screening</p>
+        <div class="feature-icon">
+            <i class="fas fa-gamepad"></i>
+        </div>
+        <h4>Educational Games</h4>
+        <div class="description">Interactive games targeting cognitive skills</div>
+        <div class="explanation">
+            <i class="fas fa-brain"></i> 29 games designed to improve memory, attention, and problem-solving.
+        </div>
     </div>
+    
     <div class="feature">
-        <div class="feature-icon"></div>
+        <div class="feature-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
         <h4>Real-time Analytics</h4>
-        <p>Track progress, generate reports</p>
+        <div class="description">Track progress, generate reports</div>
+        <div class="explanation">
+            <i class="fas fa-chart-simple"></i> View detailed progress reports and learning analytics instantly.
+        </div>
     </div>
+    
     <div class="feature">
-        <div class="feature-icon"></div>
+        <div class="feature-icon">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
         <h4>Assessments</h4>
-        <p>Comprehensive assessments with instant scoring and feedback</p>
-    </div>
-   
-</div>
-
-<div class="stats-section">
-    <div class="stats-grid">
-        <div class="stat-item">
-            <h4>29</h4>
-            <p>Educational Games</p>
-        </div>
-        <div class="stat-item">
-            <h4>3</h4>
-            <p>Grade Levels</p>
-        </div>
-        <div class="stat-item">
-            <h4>50%</h4>
-            <p>Passing Score</p>
-        </div>
-        <div class="stat-item">
-            <h4>60</h4>
-            <p>Minutes per Test</p>
+        <div class="description">Comprehensive assessments with instant feedback</div>
+        <div class="explanation">
+            <i class="fas fa-check-circle"></i> Automatic scoring and feedback to help learners improve.
         </div>
     </div>
 </div>
 
-<div style="text-align: center; margin-top: 40px;">
-    <p>Don't have an account?</p>
-    <a href="{{ url_for('register_educator') }}" class="btn btn-primary btn-large">Register as Educator</a>
-    <a href="{{ url_for('register_parent') }}" class="btn btn-primary btn-large">Register as Parent</a>
-    <a href="{{ url_for('register_learner') }}" class="btn btn-primary btn-large">Register as Learner</a>
+<div class="register-section">
+    <h3>New to EduBridge?</h3>
+    <p>Parents and teachers: Create an account to get started</p>
+    <div>
+        <a href="{{ url_for('register_educator') }}" class="btn-large">Register as Educator</a>
+        <a href="{{ url_for('register_parent') }}" class="btn-large">Register as Parent</a>
+    </div>
+    <p class="note-text">
+        <i class="fas fa-info-circle"></i> Learner accounts are created by parents or teachers.
+        Learners receive a 6-digit code to access the platform.
+    </p>
 </div>
 {% endblock %}

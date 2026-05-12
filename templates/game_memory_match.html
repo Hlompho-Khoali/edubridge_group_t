@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}🐘 Elephant's Memory Zoo{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-header h1 {
+        font-size: 2rem;
+        color: #667eea;
+    }
+    
+    .score-board {
+        display: flex;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .score-item {
+        text-align: center;
+    }
+    
+    .score-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .score-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+    
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .card {
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        transition: all 0.3s ease;
+        transform: preserve-3d;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .card.flipped {
+        background: white;
+        transform: rotateY(180deg);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card.matched {
+        background: #d4edda;
+        cursor: default;
+        opacity: 0.6;
+        transform: scale(0.95);
+    }
+    
+    .card:active {
+        transform: scale(0.95);
+    }
+    
+    .message-area {
+        text-align: center;
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .message-success {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .message-warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .btn-next {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .btn-next:hover {
+        transform: translateY(-2px);
+    }
+    
+    .celebration {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 50px;
+        border-radius: 30px;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        z-index: 1000;
+        animation: bounce 0.5s ease;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.2); }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>🐘 Elephant's Memory Zoo</h1>
+        <p>Match all the animal pairs! Tap two cards to find a match.</p>
+    </div>
+    
+    <div class="score-board">
+        <div class="score-item">
+            <div class="score-value" id="matchesCount">0</div>
+            <div class="score-label">Matches Found</div>
+        </div>
+        <div class="score-item">
+            <div class="score-value" id="attemptsCount">0</div>
+            <div class="score-label">Attempts</div>
+        </div>
+        <div class="score-item">
+            <div class="score-value" id="pairsLeft">8</div>
+            <div class="score-label">Pairs Left</div>
+        </div>
+    </div>
+    
+    <div class="cards-grid" id="cardsGrid"></div>
+    
+    <div class="message-area" id="messageArea"></div>
+    
+    <div style="text-align: center;">
+        <button class="btn-next" onclick="window.location.reload()">🔄 New Game</button>
+    </div>
+</div>
+
+<script>
+    // Animal emojis for matching pairs
+    const ANIMALS = ['🐘', '🦒', '🐒', '🦁', '🐧', '🦓', '🐪', '🐨'];
+    
+    let cards = [];
+    let flippedCards = [];
+    let matchedCards = [];
+    let attempts = 0;
+    let matches = 0;
+    let canFlip = true;
+    
+    function initGame() {
+        // Create pairs
+        let deck = [];
+        for (let animal of ANIMALS) {
+            deck.push({ animal: animal, matched: false, flipped: false });
+            deck.push({ animal: animal, matched: false, flipped: false });
+        }
+        
+        // Shuffle cards
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        
+        cards = deck;
+        flippedCards = [];
+        matchedCards = [];
+        attempts = 0;
+        matches = 0;
+        canFlip = true;
+        
+        updateUI();
+    }
+    
+    function updateUI() {
+        const grid = document.getElementById('cardsGrid');
+        grid.innerHTML = '';
+        
+        cards.forEach((card, index) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            if (card.matched) {
+                cardDiv.classList.add('matched');
+                cardDiv.innerHTML = card.animal;
+            } else if (card.flipped) {
+                cardDiv.classList.add('flipped');
+                cardDiv.innerHTML = card.animal;
+            } else {
+                cardDiv.innerHTML = '❓';
+            }
+            cardDiv.onclick = () => flipCard(index);
+            grid.appendChild(cardDiv);
+        });
+        
+        document.getElementById('matchesCount').innerText = matches;
+        document.getElementById('attemptsCount').innerText = attempts;
+        document.getElementById('pairsLeft').innerText = ANIMALS.length - matches;
+        
+        // Check win
+        if (matches === ANIMALS.length) {
+            showCelebration();
+        }
+    }
+    
+    function flipCard(index) {
+        if (!canFlip) return;
+        if (cards[index].matched) return;
+        if (cards[index].flipped) return;
+        if (flippedCards.length >= 2) return;
+        
+        // Flip card
+        cards[index].flipped = true;
+        flippedCards.push(index);
+        updateUI();
+        
+        // Check for match
+        if (flippedCards.length === 2) {
+            attempts++;
+            canFlip = false;
+            updateUI();
+            
+            const card1 = cards[flippedCards[0]];
+            const card2 = cards[flippedCards[1]];
+            
+            if (card1.animal === card2.animal) {
+                // Match found!
+                setTimeout(() => {
+                    card1.matched = true;
+                    card2.matched = true;
+                    card1.flipped = false;
+                    card2.flipped = false;
+                    matches++;
+                    flippedCards = [];
+                    canFlip = true;
+                    updateUI();
+                    
+                    // Show success message
+                    const msgDiv = document.getElementById('messageArea');
+                    msgDiv.innerHTML = '🎉 Great match! You found a pair! 🎉';
+                    msgDiv.className = 'message-area message-success';
+                    setTimeout(() => {
+                        msgDiv.innerHTML = '';
+                        msgDiv.className = 'message-area';
+                    }, 1500);
+                }, 500);
+            } else {
+                // No match
+                setTimeout(() => {
+                    cards[flippedCards[0]].flipped = false;
+                    cards[flippedCards[1]].flipped = false;
+                    flippedCards = [];
+                    canFlip = true;
+                    updateUI();
+                    
+                    // Show warning message
+                    const msgDiv = document.getElementById('messageArea');
+                    msgDiv.innerHTML = '😅 Not a match! Try again! 😅';
+                    msgDiv.className = 'message-area message-warning';
+                    setTimeout(() => {
+                        msgDiv.innerHTML = '';
+                        msgDiv.className = 'message-area';
+                    }, 1000);
+                }, 500);
+            }
+        }
+    }
+    
+    function showCelebration() {
+        const celebration = document.createElement('div');
+        celebration.className = 'celebration';
+        celebration.innerHTML = `
+            🎉🎊✨ YOU WIN! ✨🎊🎉<br>
+            ⭐⭐⭐⭐⭐<br>
+            You found all ${ANIMALS.length} pairs in ${attempts} attempts!
+        `;
+        document.body.appendChild(celebration);
+        
+        setTimeout(() => {
+            celebration.remove();
+            const msgDiv = document.getElementById('messageArea');
+            msgDiv.innerHTML = '🏆 AMAZING! You cleared the zoo! 🏆';
+            msgDiv.className = 'message-area message-success';
+        }, 3000);
+    }
+    
+    // Start the game
+    initGame();
+</script>
+{% endblock %}

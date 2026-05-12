@@ -72,6 +72,16 @@ class Learner(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('parents.id'), nullable=False)
     school = db.Column(db.String(100), nullable=True)
     
+    login_code = db.Column(db.String(6), unique=True, nullable=True)
+    # Phase tracking
+    current_phase = db.Column(db.Integer, default=1)  # ← MUST HAVE INDENTATION (4 spaces)
+    phase1_completed = db.Column(db.Boolean, default=False)
+    phase2_completed = db.Column(db.Boolean, default=False)
+    phase3_completed = db.Column(db.Boolean, default=False)
+    completed_game_ids = db.Column(db.Text, default='[]')
+    last_break_time = db.Column(db.DateTime, nullable=True)
+    games_since_break = db.Column(db.Integer, default=0)
+    
     user = db.relationship('User', backref='learner_profile')
 
 class Game(db.Model):
@@ -126,3 +136,39 @@ class TestResult(db.Model):
     
     def set_answers(self, answers):
         self.answers = json.dumps(answers)
+
+    class CognitiveAssessment(db.Model):
+    __tablename__ = 'cognitive_assessments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    learner_id = db.Column(db.Integer, db.ForeignKey('learners.id'), nullable=False)
+    assessment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Cognitive domain scores (0-100)
+    attention_score = db.Column(db.Float, default=0)
+    impulse_control_score = db.Column(db.Float, default=0)
+    working_memory_score = db.Column(db.Float, default=0)
+    processing_speed_score = db.Column(db.Float, default=0)
+    problem_solving_score = db.Column(db.Float, default=0)
+    language_score = db.Column(db.Float, default=0)
+    
+    # ADHD indicators
+    adhd_risk_score = db.Column(db.Float, default=0)  # 0-100, higher = more indicators
+    attention_deficit_risk = db.Column(db.Float, default=0)
+    hyperactivity_risk = db.Column(db.Float, default=0)
+    impulsivity_risk = db.Column(db.Float, default=0)
+    
+    # Percentile rankings (compared to same age group)
+    attention_percentile = db.Column(db.Float, default=50)
+    memory_percentile = db.Column(db.Float, default=50)
+    
+    # Recommendations (JSON)
+    recommendations = db.Column(db.Text, default='[]')
+    strengths = db.Column(db.Text, default='[]')
+    concerns = db.Column(db.Text, default='[]')
+    
+    # Report text
+    summary_report = db.Column(db.Text, default='')
+    
+    learner = db.relationship('Learner', backref='assessments')
+    

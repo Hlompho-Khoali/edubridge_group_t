@@ -106,28 +106,31 @@ def login():
     if request.method == 'POST':
         email_or_id = request.form.get('email')
         password = request.form.get('password')
-        role = request.form.get('role')
         
+        # Try to find user by email
         user = User.query.filter_by(email=email_or_id).first()
         
-        if not user and role == 'learner':
+        # If not found and it might be a learner ID number
+        if not user and email_or_id.isdigit() and len(email_or_id) == 13:
             learner = Learner.query.filter_by(id_number=email_or_id).first()
             if learner:
                 user = learner.user
         
-        if user and user.check_password(password) and user.role == role:
+        # Check password and login
+        if user and user.check_password(password):
             login_user(user)
             
-            if role == 'educator':
+            # Redirect based on role
+            if user.role == 'educator':
                 return redirect(url_for('educator_dashboard'))
-            elif role == 'parent':
+            elif user.role == 'parent':
                 return redirect(url_for('parent_dashboard'))
-            elif role == 'learner':
+            elif user.role == 'learner':
                 return redirect(url_for('learner_dashboard'))
-            elif role == 'admin':
+            elif user.role == 'admin':
                 return redirect(url_for('admin_dashboard'))
         else:
-            flash('Invalid credentials or role mismatch', 'error')
+            flash('Invalid email or password', 'error')
     
     return render_template('login.html')
 
@@ -193,74 +196,27 @@ def register_parent():
     
     return render_template('register_parent.html')
 
-@app.route('/register/learner', methods=['GET', 'POST'])
-def register_learner():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        id_number = request.form.get('id_number')
-        grade = int(request.form.get('grade'))
-        parent_id_number = request.form.get('parent_id')
-        password = request.form.get('password')
-        
-        if not email or '@' not in email:
-            flash('Please enter a valid email address', 'error')
-            return redirect(url_for('register_learner'))
-        
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered', 'error')
-            return redirect(url_for('register_learner'))
-        
-        if grade not in [1, 2, 3]:
-            flash('Please select a valid grade (1-3)', 'error')
-            return redirect(url_for('register_learner'))
-        
-        is_valid, result = validate_rsa_id(id_number)
-        if not is_valid:
-            flash(result, 'error')
-            return redirect(url_for('register_learner'))
-        
-        date_of_birth = result
-        age = calculate_age(date_of_birth)
-        
-        is_valid_age, age_message = validate_learner_age(age)
-        if not is_valid_age:
-            flash(age_message, 'error')
-            return redirect(url_for('register_learner'))
-        
-        parent = Parent.query.filter_by(id_number=parent_id_number).first()
-        if not parent:
-            flash('Parent ID number not found', 'error')
-            return redirect(url_for('register_learner'))
-        
-        if Learner.query.filter_by(id_number=id_number).first():
-            flash('ID number already registered', 'error')
-            return redirect(url_for('register_learner'))
-        
-        user = User(email=email, name=name, role='learner')
-        user.set_password(password)
-        db.session.add(user)
-        db.session.flush()
-        
-        learner = Learner(
-            user_id=user.id,
-            email=email,
-            id_number=id_number,
-            date_of_birth=date_of_birth,
-            age=age,
-            grade=grade,
-            parent_id=parent.id
-        )
-        db.session.add(learner)
-        db.session.commit()
-        
-        flash(f'Registration successful! Age: {age}, Grade: {grade}', 'success')
-        return redirect(url_for('login'))
-    
-    return render_template('register_learner.html')
+
 
 # ==================== PROFILE ROUTES ====================
-
+@app.route('/learner-login', methods=['GET', 'POST'])
+def learner_login():
+    if request.method == 'POST':
+        # Combine the 6 digits
+        code = ''.join([request.form.get(f'digit{i}') for i in range(1, 7)])
+        
+        # Find learner by code
+        learner = Learner.query.filter_by(login_code=code).first()
+        
+        if learner:
+            # Log them in
+            login_user(learner.user)
+            flash(f'Welcome back, {learner.user.name}! ', 'success')
+            return redirect(url_for('learner_dashboard'))
+        else:
+            flash('Invalid code! Please check with your teacher or parent.', 'error')
+    
+    return render_template('learner_login.html')
 @app.route('/profile')
 @login_required
 def view_profile():
@@ -590,39 +546,112 @@ def assign_test():
     return redirect(url_for('educator_dashboard'))
 
 # ==================== LEARNER ROUTES ====================
+@app.route('/parent/add-learner', methods=['POST'])
+@login_required
+def parent_add_learner():
+    if current_user.role != 'parent':
+        flash('Access denied', 'error')
+        return redirect(url_for('login'))
+    
+    name = request.form.get('name')
+    email = request.form.get('email')
+    id_number = request.form.get('id_number')
+    grade = int(request.form.get('grade'))
+    
+    parent = Parent.query.filter_by(user_id=current_user.id).first()
+    
+    # Check if email already exists
+    if User.query.filter_by(email=email).first():
+        flash('Email already registered', 'error')
+        return redirect(url_for('parent_dashboard'))
+    
+    # Validate ID number
+    is_valid, result = validate_rsa_id(id_number)
+    if not is_valid:
+        flash(result, 'error')
+        return redirect(url_for('parent_dashboard'))
+    
+    date_of_birth = result
+    age = calculate_age(date_of_birth)
+    
+    # Check if learner already exists
+    if Learner.query.filter_by(id_number=id_number).first():
+        flash('ID number already registered', 'error')
+        return redirect(url_for('parent_dashboard'))
+    
+    # Generate 6-digit login code
+    import random
+    import string
+    def generate_code():
+        return ''.join(random.choices(string.digits, k=6))
+    
+    login_code = generate_code()
+    while Learner.query.filter_by(login_code=login_code).first():
+        login_code = generate_code()
+    
+    # Create user account
+    user = User(email=email, name=name, role='learner')
+    user.set_password(login_code)  # Use code as temporary password
+    db.session.add(user)
+    db.session.flush()
+    
+    # Create learner profile
+    learner = Learner(
+        user_id=user.id,
+        email=email,
+        id_number=id_number,
+        date_of_birth=date_of_birth,
+        age=age,
+        grade=grade,
+        parent_id=parent.id,
+        login_code=login_code
+    )
+    db.session.add(learner)
+    db.session.commit()
+    
+    # Show the code on a dedicated page instead of flashing
+    return render_template('learner_code_display.html', 
+                           login_code=login_code, 
+                           learner_name=name, 
+                           grade=grade)
 
 @app.route('/learner/dashboard')
 @login_required
 def learner_dashboard():
+    
     if current_user.role != 'learner':
         return redirect(url_for('login'))
     
     learner = Learner.query.filter_by(user_id=current_user.id).first()
     assignments = TestAssignment.query.filter_by(learner_id=learner.id).all()
+        # Auto-load all games as learning path (no teacher assignment required)
+    all_games = Game.query.all()
     
     available_tests = []
     completed_tests = []
     
-    for assignment in assignments:
-        game = Game.query.get(assignment.game_id)
-        result = TestResult.query.filter_by(assignment_id=assignment.id).first()
+    for game in all_games:
+        # Check if learner has already completed this game
+        existing_assignment = TestAssignment.query.filter_by(
+            learner_id=learner.id, 
+            game_id=game.id
+        ).first()
+        
+        # Check for existing result
+        result = None
+        if existing_assignment:
+            result = TestResult.query.filter_by(assignment_id=existing_assignment.id).first()
         
         if result:
             completed_tests.append({
-                'assignment': assignment,
+                'assignment': existing_assignment,
                 'game': game,
                 'result': result
             })
         else:
-            if assignment.status == 'in_progress' and assignment.started_at:
-                time_elapsed = (datetime.utcnow() - assignment.started_at).total_seconds()
-                if time_elapsed > 3600:
-                    assignment.status = 'expired'
-                    db.session.commit()
-                    continue
-            
+            # Game is available to play (auto-learning path)
             available_tests.append({
-                'assignment': assignment,
+                'assignment': existing_assignment,
                 'game': game
             })
     
@@ -630,7 +659,13 @@ def learner_dashboard():
                          learner=learner,
                          available_tests=available_tests,
                          completed_tests=completed_tests)
-
+@app.route('/game/memory-match')
+@login_required
+def memory_match_game():
+    if current_user.role != 'learner':
+        return redirect(url_for('login'))
+    
+    return render_template('game_memory_match.html')
 @app.route('/test/start/<int:assignment_id>')
 @login_required
 def start_test(assignment_id):
@@ -778,43 +813,61 @@ def parent_dashboard():
     
     learners_data = []
     for learner in learners:
-        assignments = TestAssignment.query.filter_by(learner_id=learner.id).all()
-        results = []
-        for assignment in assignments:
-            result = TestResult.query.filter_by(assignment_id=assignment.id).first()
-            if result:
-                results.append({
-                    'assignment': assignment,
-                    'result': result,
-                    'game': assignment.game,
-                    'educator': assignment.educator
-                })
-        
-        total_tests = len(results)
-        passed_tests = len([r for r in results if r['result'].passed])
-        avg_score = sum([r['result'].percentage for r in results]) / total_tests if total_tests > 0 else 0
-        
-        pending_assignments = []
-        for assignment in assignments:
-            if assignment.status != 'completed':
-                pending_assignments.append({
-                    'assignment': assignment,
-                    'game': assignment.game,
-                    'educator': assignment.educator
-                })
+        # Count completed games
+        completed_ids = json.loads(learner.completed_game_ids) if learner.completed_game_ids else []
         
         learners_data.append({
             'learner': learner,
-            'results': results,
-            'pending_assignments': pending_assignments,
-            'pending_count': len(pending_assignments),
-            'total_tests': total_tests,
-            'passed_tests': passed_tests,
-            'avg_score': avg_score
+            'completed_games': len(completed_ids),
+            'total_games': 29
         })
     
-    return render_template('parent_dashboard.html', learners_data=learners_data)
+    return render_template('parent_dashboard.html', 
+                         learners_data=learners_data)
 
+@app.route('/parent/learner-progress/<int:learner_id>')
+@login_required
+def view_learner_progress(learner_id):
+    if current_user.role != 'parent':
+        flash('Access denied', 'error')
+        return redirect(url_for('login'))
+    
+    parent = Parent.query.filter_by(user_id=current_user.id).first()
+    learner = Learner.query.get_or_404(learner_id)
+    
+    # Verify this learner belongs to the logged-in parent
+    if learner.parent_id != parent.id:
+        flash('Access denied', 'error')
+        return redirect(url_for('parent_dashboard'))
+    
+    # Get completed games
+    import json
+    completed_ids = json.loads(learner.completed_game_ids) if learner.completed_game_ids else []
+    
+    # Get all games
+    games = Game.query.all()
+    
+    # Calculate progress by category
+    categories = {}
+    for game in games:
+        if game.category not in categories:
+            categories[game.category] = {'total': 0, 'completed': 0}
+        categories[game.category]['total'] += 1
+        if game.id in completed_ids:
+            categories[game.category]['completed'] += 1
+    
+    completed_count = len(completed_ids)
+    total_games = len(games)
+    percentage = (completed_count / total_games * 100) if total_games > 0 else 0
+    
+    return render_template('learner_progress.html', 
+                         learner=learner,
+                         games=games,
+                         completed_ids=completed_ids,
+                         categories=categories,
+                         completed_count=completed_count,
+                         total_games=total_games,
+                         percentage=percentage)
 # ==================== GAMES ROUTES ====================
 
 @app.route('/games')
@@ -942,28 +995,57 @@ def ai_analysis():
         flash('Learner profile not found', 'error')
         return redirect(url_for('learner_dashboard'))
     
+    # Collect all game results
     assignments = TestAssignment.query.filter_by(learner_id=learner.id).all()
-    test_results = []
+    game_results = []
     
     for assignment in assignments:
         result = TestResult.query.filter_by(assignment_id=assignment.id).first()
         if result:
             game = Game.query.get(assignment.game_id)
-            test_results.append({
-                'result': result,
-                'game': game,
+            game_results.append({
+                'game_id': game.id,
+                'game_name': game.name,
                 'percentage': result.percentage,
                 'score': result.score,
                 'passed': result.passed,
+                'reaction_time': 350,  # Placeholder - would come from game data
+                'errors': 0,  # Placeholder
                 'date': result.completed_at
             })
     
-    analysis = generate_ai_analysis(test_results, learner)
+    # Run AI analysis
+    from utils.ai_analyzer import AIAnalyzer
+    analyzer = AIAnalyzer(learner, game_results)
+    analysis = analyzer.analyze()
+    
+    # Save assessment to database
+    import json
+    assessment = CognitiveAssessment(
+        learner_id=learner.id,
+        attention_score=analysis['cognitive_scores'].get('attention', 0) or 0,
+        impulse_control_score=analysis['cognitive_scores'].get('impulse_control', 0) or 0,
+        working_memory_score=analysis['cognitive_scores'].get('working_memory', 0) or 0,
+        processing_speed_score=analysis['cognitive_scores'].get('processing_speed', 0) or 0,
+        problem_solving_score=analysis['cognitive_scores'].get('problem_solving', 0) or 0,
+        language_score=analysis['cognitive_scores'].get('language', 0) or 0,
+        adhd_risk_score=analysis['adhd_indicators']['overall_risk'],
+        attention_deficit_risk=analysis['adhd_indicators']['attention_deficit_risk'],
+        hyperactivity_risk=analysis['adhd_indicators']['hyperactivity_risk'],
+        impulsivity_risk=analysis['adhd_indicators']['impulsivity_risk'],
+        recommendations=json.dumps(analysis['recommendations']),
+        strengths=json.dumps(analysis['strengths']),
+        concerns=json.dumps(analysis['concerns']),
+        summary_report=analysis['summary']
+    )
+    db.session.add(assessment)
+    db.session.commit()
     
     return render_template('ai_analysis.html', 
                          learner=learner,
                          analysis=analysis,
-                         test_results=test_results)
+                         game_results=game_results,
+                         assessment=assessment)
 
 @app.route('/logout')
 @login_required

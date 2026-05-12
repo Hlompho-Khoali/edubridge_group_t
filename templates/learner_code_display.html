@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Learner Account Created{% endblock %}
+
+{% block content %}
+<style>
+    .code-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 48px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    
+    h2 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .learner-name {
+        font-size: 1.2rem;
+        color: #555;
+        margin-bottom: 20px;
+    }
+    
+    .code-box {
+        background: #f8f9fa;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .code-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .code-value {
+        font-size: 48px;
+        font-weight: bold;
+        letter-spacing: 8px;
+        color: #333;
+        font-family: monospace;
+    }
+    
+    .instruction {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .instruction h4 {
+        margin-bottom: 10px;
+        color: #667eea;
+    }
+    
+    .instruction p {
+        margin: 5px 0;
+        color: #555;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-print {
+        background: #28a745;
+        color: white;
+    }
+</style>
+
+<div class="code-container">
+    <div class="success-icon">✓</div>
+    <h2>Learner Account Created</h2>
+    <div class="learner-name">Name: {{ learner_name }} | Grade: {{ grade }}</div>
+    
+    <div class="code-box">
+        <div class="code-label">Login Code</div>
+        <div class="code-value">{{ login_code }}</div>
+    </div>
+    
+    <div class="instruction">
+        <h4>How to use this code:</h4>
+        <p>1. Give this 6-digit code to the learner</p>
+        <p>2. Learner goes to the EduBridge homepage</p>
+        <p>3. Clicks on "Learner Login"</p>
+        <p>4. Enters the 6-digit code</p>
+        <p>5. No email or password needed</p>
+    </div>
+    
+    <div>
+        <button onclick="window.print()" class="btn btn-print">Print Code</button>
+        <a href="{{ url_for('parent_dashboard') }}" class="btn btn-primary">Done</a>
+    </div>
+</div>
+{% endblock %}
