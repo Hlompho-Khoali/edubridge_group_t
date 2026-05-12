@@ -236,40 +236,50 @@
     }
     
     function finishGame() {
-        const percentage = (score / (totalRounds * 10)) * 100;
-        const passed = percentage >= 70;
-        
-        fetch('/game/save-result', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                game_name: 'Red Light, Green Light',
-                percentage: percentage,
-                score: score,
-                passed: passed,
-                correct_count: correctCount,
-                total_rounds: totalRounds
-            })
-        });
-        
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:999;';
-        document.body.appendChild(overlay);
-        
-        const completeDiv = document.createElement('div');
-        completeDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;padding:40px;border-radius:20px;text-align:center;z-index:1000;min-width:350px;';
-        completeDiv.innerHTML = `
-            <h2>${passed ? '🎉 GAME COMPLETE! 🎉' : 'Game Complete'}</h2>
-            <p>Score: ${score} / ${totalRounds * 10}</p>
-            <p>Percentage: ${percentage}%</p>
-            <p>Correct: ${correctCount} / ${totalRounds}</p>
-            <p>${passed ? 'Great attention and impulse control!' : 'Keep practicing your focus!'}</p>
-            <button onclick="window.location.href='/learner/dashboard'" style="background:white;color:#667eea;padding:10px 25px;border:none;border-radius:25px;margin:10px;cursor:pointer;">Return to Dashboard</button>
-            <button onclick="window.location.reload()" style="background:white;color:#667eea;padding:10px 25px;border:none;border-radius:25px;margin:10px;cursor:pointer;">Play Again</button>
-        `;
-        document.body.appendChild(completeDiv);
-    }
+    const percentage = (score / (totalRounds * 10)) * 100;
+    const passed = percentage >= 70;
     
-    loadRound();
+    // Show completion screen
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:999;';
+    document.body.appendChild(overlay);
+    
+    const completeDiv = document.createElement('div');
+    completeDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;padding:40px;border-radius:20px;text-align:center;z-index:1000;min-width:350px;';
+    completeDiv.innerHTML = `
+        <h2>${passed ? '🎉 GAME COMPLETE! 🎉' : 'Game Complete'}</h2>
+        <p>Score: ${score} / ${totalRounds * 10}</p>
+        <p>Percentage: ${percentage}%</p>
+        <p>Correct: ${correctCount} / ${totalRounds}</p>
+        <div class="loading-next">Loading next game...</div>
+    `;
+    document.body.appendChild(completeDiv);
+    
+    // Send completion to server
+    fetch('/game/complete-and-next', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            game_id: {{ game.id }},
+            assignment_id: {{ assignment_id }},
+            percentage: percentage,
+            score: score,
+            passed: passed,
+            phase: {{ phase|default(1) }}
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.next_game) {
+            setTimeout(() => {
+                window.location.href = '/play/phase/' + data.phase;
+            }, 2000);
+        } else {
+            setTimeout(() => {
+                window.location.href = '/learner/dashboard';
+            }, 2000);
+        }
+    });
+}
 </script>
 {% endblock %}

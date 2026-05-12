@@ -952,6 +952,100 @@ def view_game_details(game_id):
     questions = json.loads(game.questions)
     return render_template('game_details.html', game=game, questions=questions)
 
+@app.route('/play/phase/<int:phase>')
+@login_required
+def play_phase(phase):
+    if current_user.role != 'learner':
+        return redirect(url_for('login'))
+    
+    learner = Learner.query.filter_by(user_id=current_user.id).first()
+    
+    # Define games for each phase
+    phase_games = {
+        1: [3, 6, 8, 14, 15, 16, 18, 19, 25],  # Brain Boosters
+        2: [4, 5, 9, 12, 13, 17, 21, 22, 24, 10],  # Word Explorers
+        3: [1, 7, 11, 20, 23, 26, 27, 28, 29, 2]  # Number Heroes
+    }
+    
+    games_list = phase_games.get(phase, [])
+    completed_ids = json.loads(learner.completed_game_ids) if learner.completed_game_ids else []
+    
+    # Find first incomplete game
+    current_game_id = None
+    for game_id in games_list:
+        if game_id not in completed_ids:
+            current_game_id = game_id
+            break
+    
+    if not current_game_id:
+        flash(f'Phase {phase} is already complete!', 'success')
+        return redirect(url_for('learner_dashboard'))
+    
+    game = Game.query.get(current_game_id)
+    
+    # Create or get assignment
+    assignment = TestAssignment.query.filter_by(
+        learner_id=learner.id,
+        game_id=current_game_id
+    ).first()
+    
+    if not assignment:
+        assignment = TestAssignment(
+            game_id=current_game_id,
+            learner_id=learner.id,
+            educator_id=None,
+            status='in_progress',
+            started_at=datetime.utcnow()
+        )
+        db.session.add(assignment)
+        db.session.commit()
+    
+    # Redirect to the appropriate game template
+    return redirect(url_for('play_game', game_id=current_game_id, assignment_id=assignment.id)) 
+
+@app.route('/play/game/<int:game_id>/<int:assignment_id>')
+@login_required
+def play_game(game_id, assignment_id):
+    if current_user.role != 'learner':
+        return redirect(url_for('login'))
+    
+    game = Game.query.get(game_id)
+    
+    # Map game names to templates
+    game_templates = {
+        'Memory Match': 'game_memory_match.html',
+        'Penguin Says': 'game_penguin_says.html',
+        'Red Light, Green Light': 'game_red_light.html'
+    }
+    
+    template = game_templates.get(game.name, 'game_generic.html')
+    
+    return render_template(template, 
+                         game=game, 
+                         assignment_id=assignment_id,
+                         return_phase=True)
+
+@app.route('/game/complete-and-next', methods=['POST'])
+@login_required
+def complete_and_next():
+    if current_user.role != 'learner':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    game_id = data.get('game_id')
+    assignment_id = data.get('assignment_id')
+    
+    learner = Learner.query.filter_by(user_id=current_user.id).first()
+    
+    # Mark game as completed
+    completed_ids = json.loads(learner.completed_game_ids) if learner.completed_game_ids else []
+    if game_id not in completed_ids:
+        completed_ids.append(game_id)
+        learner.completed_game_ids = json.dumps(completed_ids)
+        db.session.commit()
+    
+    return jsonify({'success': True, 'next_game': True})
+
 @app.route('/games/public')
 @login_required
 def view_public_games():

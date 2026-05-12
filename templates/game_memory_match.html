@@ -297,25 +297,54 @@
         }
     }
     
-    function showCelebration() {
+   function showCelebration() {
         const celebration = document.createElement('div');
         celebration.className = 'celebration';
         celebration.innerHTML = `
-            🎉🎊✨ YOU WIN! ✨🎊🎉<br>
-            ⭐⭐⭐⭐⭐<br>
-            You found all ${ANIMALS.length} pairs in ${attempts} attempts!
+            🎉 YOU WIN! 🎉<br>
+            You found all pairs in ${attempts} attempts!
         `;
         document.body.appendChild(celebration);
         
         setTimeout(() => {
             celebration.remove();
-            const msgDiv = document.getElementById('messageArea');
-            msgDiv.innerHTML = '🏆 AMAZING! You cleared the zoo! 🏆';
-            msgDiv.className = 'message-area message-success';
-        }, 3000);
+            // Send completion to server
+            completeGame();
+        }, 2000);
     }
     
-    // Start the game
-    initGame();
+    function completeGame() {
+        fetch('/game/complete-and-next', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                game_id: {{ game.id }},
+                assignment_id: {{ assignment_id }},
+                phase: {{ phase|default(1) }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.next_game) {
+                // Show loading message
+                const msgDiv = document.getElementById('messageArea');
+                if (msgDiv) {
+                    msgDiv.innerHTML = 'Loading next game... 🎮';
+                    msgDiv.className = 'message-area message-success';
+                }
+                // Redirect to next game
+                setTimeout(() => {
+                    window.location.href = '/play/phase/' + data.phase;
+                }, 1500);
+            } else {
+                // Go back to dashboard
+                setTimeout(() => {
+                    window.location.href = '/learner/dashboard';
+                }, 2000);
+            }
+        });
+    
 </script>
 {% endblock %}
