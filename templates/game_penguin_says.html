@@ -301,47 +301,54 @@
         document.getElementById('reactionTime').innerText = avg;
     }
     
-    function finishGame() {
-        const percentage = (score / (totalRounds * 10)) * 100;
-        const passed = percentage >= 70;
-        const avgReaction = reactionTimes.length > 0 
-            ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-            : 0;
-        
-        // Save result to server
-        fetch('/game/save-result', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                game_name: 'Penguin Says',
-                percentage: percentage,
-                score: score,
-                passed: passed,
-                reaction_time: avgReaction,
-                errors: totalRounds - (score / 10)
-            })
-        });
-        
-        // Show completion screen
-        const overlay = document.createElement('div');
-        overlay.className = 'overlay';
-        document.body.appendChild(overlay);
-        
-        const completeDiv = document.createElement('div');
-        completeDiv.className = 'game-complete';
-        completeDiv.innerHTML = `
-            <h2>${passed ? '🎉 GAME COMPLETE! 🎉' : 'Game Complete'}</h2>
-            <p>Score: ${score} / ${totalRounds * 10}</p>
-            <p>Percentage: ${percentage}%</p>
-            <p>Average Reaction: ${avgReaction}ms</p>
-            <p>${passed ? 'Excellent impulse control!' : 'Keep practicing!'}</p>
-            <button onclick="window.location.href='/learner/dashboard'">Return to Dashboard</button>
-            <button onclick="window.location.reload()">Play Again</button>
-        `;
-        document.body.appendChild(completeDiv);
-    }
+function finishGame() {
+    const percentage = (score / (totalRounds * 10)) * 100;
+    const passed = percentage >= 70;
+    const avgReaction = reactionTimes.length > 0 
+        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
+        : 0;
     
-    // Start the game
-    loadRound();
+    // Show completion screen
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    document.body.appendChild(overlay);
+    
+    const completeDiv = document.createElement('div');
+    completeDiv.className = 'game-complete';
+    completeDiv.innerHTML = `
+        <h2>${passed ? '🎉 GAME COMPLETE! 🎉' : 'Game Complete'}</h2>
+        <p>Score: ${score} / ${totalRounds * 10}</p>
+        <p>Percentage: ${percentage}%</p>
+        <p>Average Reaction: ${avgReaction}ms</p>
+        <div class="loading-next">Loading next game...</div>
+    `;
+    document.body.appendChild(completeDiv);
+    
+    // Send completion to server
+    fetch('/game/complete-and-next', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            game_id: {{ game.id }},
+            assignment_id: {{ assignment_id }},
+            percentage: percentage,
+            score: score,
+            passed: passed,
+            phase: {{ phase|default(1) }}
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.next_game) {
+            setTimeout(() => {
+                window.location.href = '/play/phase/' + data.phase;
+            }, 2000);
+        } else {
+            setTimeout(() => {
+                window.location.href = '/learner/dashboard';
+            }, 2000);
+        }
+    });
+}
 </script>
 {% endblock %}
